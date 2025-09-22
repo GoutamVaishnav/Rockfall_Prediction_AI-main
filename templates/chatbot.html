@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MineSafe - AI Assistant</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <style>
+    :root { --primary-color:#1193d4; }
+    body { font-family:'Inter',sans-serif; background:#111618; }
+    .message { max-width:70%; }
+    .typing-indicator { animation:pulse 2s infinite; }
+    @keyframes pulse {0%,100%{opacity:.7}50%{opacity:1}}
+  </style>
+</head>
+<body class="text-white">
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-[#192633] p-6 flex flex-col">
+      <div class="flex items-center gap-3 mb-10">
+        <span class="material-symbols-outlined text-[#1193d4]">shield</span>
+        <h1 class="text-xl font-bold">MineSafe</h1>
+      </div>
+      <nav class="flex flex-col gap-2 flex-grow">
+        <a href="{{ url_for('index') }}" class="px-4 py-2 rounded-md text-gray-400 hover:bg-[#233648] hover:text-white flex gap-2 items-center"><span class="material-symbols-outlined">dashboard</span>Dashboard</a>
+        <a href="{{ url_for('predictions') }}" class="px-4 py-2 rounded-md text-gray-400 hover:bg-[#233648] hover:text-white flex gap-2 items-center"><span class="material-symbols-outlined">model_training</span>Predictions</a>
+        <a href="{{ url_for('alerts') }}" class="px-4 py-2 rounded-md text-gray-400 hover:bg-[#233648] hover:text-white flex gap-2 items-center"><span class="material-symbols-outlined">notifications</span>Alerts</a>
+        <a href="{{ url_for('upload') }}" class="px-4 py-2 rounded-md text-gray-400 hover:bg-[#233648] hover:text-white flex gap-2 items-center"><span class="material-symbols-outlined">upload_file</span>Upload Data</a>
+        <a href="{{ url_for('results') }}" class="px-4 py-2 rounded-md text-gray-400 hover:bg-[#233648] hover:text-white flex gap-2 items-center"><span class="material-symbols-outlined">summarize</span>Results</a>
+        <a href="{{ url_for('chatbot') }}" class="px-4 py-2 rounded-md bg-[#233648] text-white flex gap-2 items-center"><span class="material-symbols-outlined">smart_toy</span>AI Assistant</a>
+      </nav>
+    </aside>
+
+    <!-- Chat -->
+    <main class="flex-1 p-8 flex flex-col">
+      <h1 class="text-3xl font-bold mb-2">AI Assistant</h1>
+      <p class="text-gray-400 mb-6">Ask about safety, alerts, predictions.</p>
+
+      <div class="flex-1 border border-[#233648] bg-[#192633] rounded-lg flex flex-col">
+        <div id="chat" class="flex-1 p-4 overflow-y-auto space-y-4">
+          <div class="flex gap-3">
+            <span class="material-symbols-outlined text-[#1193d4] shrink-0">smart_toy</span>
+            <div class="message bg-[#111a22] p-3 rounded-lg">
+              <p class="text-sm">Hello! I’m your MineSafe assistant. Ask me about safety checks or type your PIN for local risk.</p>
+            </div>
+          </div>
+        </div>
+        <div class="border-t border-[#233648] p-3 flex gap-3">
+          <input id="user-input" class="flex-1 bg-[#111a22] border border-[#233648] rounded-md px-3 py-2 text-white" placeholder="Type a message..." />
+          <button id="send-btn" class="bg-[#1193d4] hover:bg-[#0d7bb8] px-4 py-2 rounded-md">Send</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Inline the chatbot functionality since the external JS file isn't properly served
+    window.MineSafeAI = {
+      async handleChatMessage(message) {
+        // Simple responses for demo
+        const responses = {
+          "hello": "Hello! I'm your MineSafe assistant. How can I help you today?",
+          "safety": "Safety first! Always wear protective equipment and follow protocols.",
+          "alerts": "I can help you check current alerts and warnings.",
+          "predictions": "I can explain rockfall predictions and risk levels.",
+          "help": "I can assist with safety checks, alerts, predictions, and general mining safety questions.",
+        };
+        
+        const lowerMessage = message.toLowerCase();
+        for (const [key, response] of Object.entries(responses)) {
+          if (lowerMessage.includes(key)) {
+            return { message: response };
+          }
+        }
+        
+        return { message: "I'm here to help with mining safety. Try asking about safety, alerts, or predictions!" };
+      },
+      
+      async handleSafetyCheckWithPincode(pincode) {
+        // Mock safety check response
+        const riskLevels = ["Low", "Medium", "High"];
+        const randomRisk = riskLevels[Math.floor(Math.random() * riskLevels.length)];
+        
+        return {
+          message: `Safety check for PIN ${pincode}:\n\nCurrent Risk Level: ${randomRisk}\nLast Updated: ${new Date().toLocaleString()}\n\nRecommendations:\n- Monitor seismic activity\n- Check weather conditions\n- Review evacuation routes`
+        };
+      }
+    };
+  </script>
+  <script src="./chatbot.js"></script>
+  <script>
+    const chat = document.getElementById("chat");
+    const input = document.getElementById("user-input");
+    const btn = document.getElementById("send-btn");
+
+    function addMsg(sender, text) {
+      const div = document.createElement("div");
+      div.classList.add("flex","gap-3");
+      const icon = sender==="AI"?"smart_toy":"person";
+      const color = sender==="AI"?"text-[#1193d4]":"text-gray-400";
+      const bg = sender==="AI"?"bg-[#111a22]":"bg-[#233648]";
+      div.innerHTML = `
+        <span class="material-symbols-outlined ${color} shrink-0">${icon}</span>
+        <div class="message ${bg} p-3 rounded-lg"><p class="text-sm whitespace-pre-line">${text}</p></div>`;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function sendMsg() {
+      const txt = input.value.trim();
+      if (!txt) return;
+      addMsg("You", txt);
+      input.value = "";
+      const typing = document.createElement("div");
+      typing.classList.add("flex","gap-3","typing-indicator");
+      typing.innerHTML = `<span class="material-symbols-outlined text-[#1193d4]">smart_toy</span><div class="message bg-[#111a22] p-3 rounded-lg"><p class="text-sm">Typing...</p></div>`;
+      chat.appendChild(typing); chat.scrollTop = chat.scrollHeight;
+
+      let resp;
+      if (/^\d{6}$/.test(txt)) resp = await window.MineSafeAI.handleSafetyCheckWithPincode(txt);
+      else resp = await window.MineSafeAI.handleChatMessage(txt);
+
+      typing.remove();
+      addMsg("AI", resp.message);
+    }
+
+    btn.addEventListener("click", sendMsg);
+    input.addEventListener("keypress", e => { if (e.key==="Enter") sendMsg(); });
+  </script>
+</body>
+</html>

@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MineSafe - AI Predictions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --dark-bg: #0d1117;
+            --card-bg: #161b22;
+            --sidebar-bg: #0d1117;
+            --border-color: #30363d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --accent-blue: #2ea043;
+            --accent-orange: #fb8500;
+            --accent-red: #f85149;
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #30363d #0d1117;
+        }
+
+        *::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background-color: #30363d;
+            border-radius: 10px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+        }
+
+        .metric-card {
+            transition: all 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            border-color: #6e7681;
+        }
+
+        .status-indicator {
+            position: relative;
+        }
+
+        .status-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -8px;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .sidebar-link {
+            position: relative;
+        }
+
+        .sidebar-link.active::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: var(--accent-blue);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 320px;
+        }
+
+        .prediction-timeline {
+            position: relative;
+        }
+
+        .prediction-timeline::before {
+            content: '';
+            position: absolute;
+            left: 16px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: var(--border-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="w-64 bg-[var(--sidebar-bg)] border-r border-[var(--border-color)] fixed h-full">
+        <div class="p-6 border-b border-[var(--border-color)]">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-[var(--accent-blue)] rounded flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white text-lg">shield</span>
+                </div>
+                <div>
+                    <h1 class="text-lg font-semibold">MineSafe</h1>
+                    <p class="text-xs text-[var(--text-secondary)]">Professional v2.1</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="p-4 space-y-1">
+            <a href="{{ url_for('index') }}" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded text-[var(--text-secondary)] hover:text-white hover:bg-[var(--card-bg)] transition-colors">
+                <span class="material-symbols-outlined text-lg">dashboard</span>
+                <span>Dashboard</span>
+            </a>
+            
+            <a href="{{ url_for('predictions') }}" class="sidebar-link active flex items-center gap-3 px-4 py-2.5 rounded text-white bg-[var(--card-bg)]">
+                <span class="material-symbols-outlined text-lg">psychology</span>
+                <span>AI Predictions</span>
+            </a>
+            
+            <a href="{{ url_for('alerts') }}" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded text-[var(--text-secondary)] hover:text-white hover:bg-[var(--card-bg)] transition-colors">
+                <span class="material-symbols-outlined text-lg">crisis_alert</span>
+                <span>Alerts</span>
+                <span class="ml-auto bg-[var(--accent-red)] text-white text-xs px-2 py-0.5 rounded-full">{{ no_of_alerts or 3 }}</span>
+            </a>
+            
+            <div class="pt-4">
+                <p class="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider px-4 mb-2">Data</p>
+                <a href="{{ url_for('upload') }}" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded text-[var(--text-secondary)] hover:text-white hover:bg-[var(--card-bg)] transition-colors">
+                    <span class="material-symbols-outlined text-lg">upload_file</span>
+                    <span>Upload Data</span>
+                </a>
+                <a href="{{ url_for('results') }}" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded text-[var(--text-secondary)] hover:text-white hover:bg-[var(--card-bg)] transition-colors">
+                    <span class="material-symbols-outlined text-lg">analytics</span>
+                    <span>Analytics</span>
+                </a>
+            </div>
+
+            <div class="pt-4">
+                <p class="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider px-4 mb-2">Support</p>
+                <a href="{{ url_for('chatbot') }}" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded text-[var(--text-secondary)] hover:text-white hover:bg-[var(--card-bg)] transition-colors">
+                    <span class="material-symbols-outlined text-lg">smart_toy</span>
+                    <span>AI Assistant</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="mt-auto p-4 border-t border-[var(--border-color)]">
+            <div class="glass-card rounded p-3 text-center">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm">Model Status</span>
+                    <span class="text-xs text-[var(--accent-blue)] status-indicator">Active</span>
+                </div>
+                <div class="text-lg font-bold">94.2%</div>
+                <div class="text-xs text-[var(--text-secondary)]">Accuracy</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ml-64 min-h-screen">
+        <!-- Header -->
+        <header class="bg-[var(--card-bg)] border-b border-[var(--border-color)] p-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold">AI Prediction Engine</h1>
+                    <p class="text-[var(--text-secondary)] mt-1">Advanced machine learning models for rockfall risk assessment</p>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 text-sm">
+                        <div class="w-2 h-2 bg-[var(--accent-blue)] rounded-full"></div>
+                        <span class="text-[var(--text-secondary)]">Models Active</span>
+                    </div>
+                    <span class="text-sm font-mono text-[var(--text-secondary)]" id="currentTime"></span>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-6">
+            <!-- Key Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div class="metric-card glass-card rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-sm text-[var(--text-secondary)]">Model Accuracy</p>
+                            <p class="text-2xl font-bold">94.2%</p>
+                        </div>
+                        <span class="material-symbols-outlined text-[var(--accent-blue)]">verified</span>
+                    </div>
+                    <p class="text-xs text-[var(--text-secondary)]">↑ 2.1% from last week</p>
+                </div>
+
+                <div class="metric-card glass-card rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-sm text-[var(--text-secondary)]">Active Predictions</p>
+                            <p class="text-2xl font-bold">{{ data.total_predictions if data else 247 }}</p>
+                        </div>
+                        <span class="material-symbols-outlined text-[var(--accent-blue)]">trending_up</span>
+                    </div>
+                    <p class="text-xs text-[var(--text-secondary)]">Real-time analysis</p>
+                </div>
+
+                <div class="metric-card glass-card rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-sm text-[var(--text-secondary)]">Risk Score</p>
+                            <p class="text-2xl font-bold text-[var(--accent-orange)]">{{ data.average_risk if data else 6.7 }}</p>
+                        </div>
+                        <span class="material-symbols-outlined text-[var(--accent-orange)]">warning</span>
+                    </div>
+                    <p class="text-xs text-[var(--text-secondary)]">Moderate level</p>
+                </div>
+
+                <div class="metric-card glass-card rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-sm text-[var(--text-secondary)]">Processing Speed</p>
+                            <p class="text-2xl font-bold">1.3ms</p>
+                        </div>
+                        <span class="material-symbols-outlined text-[var(--accent-blue)]">speed</span>
+                    </div>
+                    <p class="text-xs text-[var(--text-secondary)]">Average inference</p>
+                </div>
+            </div>
+
+            <!-- Time Frame Selection -->
+            <div class="mb-6">
+                <div class="glass-card rounded-lg p-1 inline-flex">
+                    <button class="prediction-timeframe px-4 py-2 rounded bg-[var(--accent-blue)] text-white text-sm font-medium" data-timeframe="realtime">
+                        Real-time
+                    </button>
+                    <button class="prediction-timeframe px-4 py-2 rounded text-[var(--text-secondary)] hover:text-white text-sm font-medium transition-colors" data-timeframe="1week">
+                        7 Days
+                    </button>
+                    <button class="prediction-timeframe px-4 py-2 rounded text-[var(--text-secondary)] hover:text-white text-sm font-medium transition-colors" data-timeframe="1month">
+                        30 Days
+                    </button>
+                    <button class="prediction-timeframe px-4 py-2 rounded text-[var(--text-secondary)] hover:text-white text-sm font-medium transition-colors" data-timeframe="3months">
+                        90 Days
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+                <!-- Risk Analysis Chart -->
+                <div class="xl:col-span-2 glass-card rounded-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Risk Analysis Trends</h3>
+                        <div class="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                            <div class="w-2 h-2 bg-[var(--accent-blue)] rounded-full"></div>
+                            <span>Live Data</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="riskChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Model Performance -->
+                <div class="glass-card rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4">Model Performance</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="p-4 rounded border border-[var(--border-color)]">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-sm">neurology</span>
+                                    <span class="text-sm font-medium">Neural Network</span>
+                                </div>
+                                <span class="text-sm font-bold">94.2%</span>
+                            </div>
+                            <div class="w-full bg-gray-700 rounded-full h-1.5">
+                                <div class="bg-[var(--accent-blue)] h-1.5 rounded-full" style="width: 94.2%"></div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded border border-[var(--border-color)]">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-sm">scatter_plot</span>
+                                    <span class="text-sm font-medium">Random Forest</span>
+                                </div>
+                                <span class="text-sm font-bold">91.8%</span>
+                            </div>
+                            <div class="w-full bg-gray-700 rounded-full h-1.5">
+                                <div class="bg-[var(--accent-blue)] h-1.5 rounded-full" style="width: 91.8%"></div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded border border-[var(--border-color)]">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-sm">support_agent</span>
+                                    <span class="text-sm font-medium">SVM Classifier</span>
+                                </div>
+                                <span class="text-sm font-bold">89.4%</span>
+                            </div>
+                            <div class="w-full bg-gray-700 rounded-full h-1.5">
+                                <div class="bg-[var(--accent-blue)] h-1.5 rounded-full" style="width: 89.4%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-4 bg-[var(--dark-bg)] rounded">
+                        <h4 class="text-sm font-medium mb-2">Ensemble Result</h4>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p class="text-[var(--text-secondary)]">Combined Accuracy</p>
+                                <p class="font-bold">96.1%</p>
+                            </div>
+                            <div>
+                                <p class="text-[var(--text-secondary)]">Inference Time</p>
+                                <p class="font-bold">1.3ms</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Predictions -->
+            <div class="glass-card rounded-lg p-6 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-lg font-semibold">Recent Predictions</h3>
+                        <p class="text-sm text-[var(--text-secondary)]">AI-generated risk assessments</p>
+                    </div>
+                    <button id="generatePredictions" class="flex items-center gap-2 px-4 py-2 bg-[var(--accent-blue)] hover:bg-[var(--accent-blue)]/80 rounded text-white font-medium transition-colors">
+                        <span class="material-symbols-outlined text-sm">refresh</span>
+                        Generate New
+                    </button>
+                </div>
+
+                <div class="prediction-timeline space-y-4">
+                    {% if data and data.predictions %}
+                        {% for i in range(data.predictions|length) %}
+                        <div class="flex items-start gap-4 relative">
+                            <div class="w-8 h-8 rounded-full bg-[var(--card-bg)] border-2 border-[var(--border-color)] flex items-center justify-center flex-shrink-0 z-10">
+                                {% if data.predictions[i] == 'Low' %}
+                                <span class="material-symbols-outlined text-[var(--accent-blue)] text-sm">check_circle</span>
+                                {% elif data.predictions[i] == 'Medium' %}
+                                <span class="material-symbols-outlined text-[var(--accent-orange)] text-sm">warning</span>
+                                {% elif data.predictions[i] == 'High' %}
+                                <span class="material-symbols-outlined text-[var(--accent-orange)] text-sm">error</span>
+                                {% else %}
+                                <span class="material-symbols-outlined text-[var(--accent-red)] text-sm">crisis_alert</span>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1 p-4 border border-[var(--border-color)] rounded">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h4 class="font-medium">Zone {{ ["Alpha", "Beta", "Gamma", "Delta", "Echo"][i % 5] }} Analysis</h4>
+                                        <p class="text-sm text-[var(--text-secondary)]">{{ ["2 mins", "15 mins", "1 hour", "3 hours", "6 hours"][i] }} ago</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-bold {% if data.predictions[i] == 'Low' %}text-[var(--accent-blue)]{% elif data.predictions[i] == 'Medium' %}text-[var(--accent-orange)]{% else %}text-[var(--accent-red)]{% endif %}">
+                                            {{ data.predictions[i] }} Risk
+                                        </p>
+                                        {% if data.probabilities and i < data.probabilities|length %}
+                                        <p class="text-sm text-[var(--text-secondary)]">{{ "%.1f"|format(data.probabilities[i][data.predictions[i]] * 100) }}% confidence</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-3 gap-4 text-sm">
+                                    <div>
+                                        <p class="text-[var(--text-secondary)]">Seismic</p>
+                                        <p class="font-medium">{{ [2.1, 3.4, 1.8, 4.2, 2.9][i % 5] }}Hz</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[var(--text-secondary)]">Weather</p>
+                                        <p class="font-medium">{{ [15, 23, 8, 31, 19][i % 5] }}mm</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[var(--text-secondary)]">Stability</p>
+                                        <p class="font-medium">{{ [87, 74, 91, 62, 83][i % 5] }}%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <!-- Demo Predictions -->
+                        <div class="flex items-start gap-4 relative">
+                            <div class="w-8 h-8 rounded-full bg-[var(--card-bg)] border-2 border-[var(--accent-red)] flex items-center justify-center flex-shrink-0 z-10">
+                                <span class="material-symbols-outlined text-[var(--accent-red)] text-sm">crisis_alert</span>
+                            </div>
+                            <div class="flex-1 p-4 border border-[var(--accent-red)] rounded">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h4 class="font-medium">Zone Alpha - Critical Alert</h4>
+                                        <p class="text-sm text-[var(--text-secondary)]">Just now</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-bold text-[var(--accent-red)]">Critical Risk</p>
+                                        <p class="text-sm text-[var(--text-secondary)]">94.7% confidence</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-3 gap-4 text-sm mb-3">
+                                    <div>
+                                        <p class="text-[var(--text-secondary)]">Seismic</p>
+                                        <p class="font-medium text-[var(--accent-red)]">7.2Hz</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[var(--text-secondary)]">Weather</p>
+                                        <p class="font-medium text-[var(--accent-orange)]">45mm</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[var(--text-secondary)]">Stability</p>
+                                        <p class="font-medium text-[var(--accent-red)]">34%</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex gap-2">
+                                    <button class="px-3 py-1 bg-[var(--accent-red)] text-white rounded text-sm">Alert Personnel</button>
+                                    <button class="px-3 py-1 border border-[var(--border-color)] rounded text-sm">View Details</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4 relative">
+                            <div class="w-8 h-8 rounded-full bg-[var(--card-bg)] border-2 border-[var(--accent-orange)] flex items-center justify-center flex-shrink-0 z-10">
+                                <span class="material-symbols-outlined text-[var(--accent-orange)] text-sm">warning</span>
+                            </div>
+                            <div class="flex-1 p-4 border border-[var(--border-color)] rounded">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h4 class="font-medium">Zone Beta - Elevated Risk</h4>
+                                        <p class="text-sm text-[var(--text-secondary)]">5 mins ago</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-bold text-[var(--accent-orange)]">High Risk</p>
+                                        <p class="text-sm text-[var(--text-secondary)]">87.3% confidence</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-3 gap-4 text-sm">
+                                    <div>
+                                        <p class="text-[var(--text-secondary)]">Seismic</p>
+                                        <p class="font-medium">4.1Hz</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[var(--text-secondary)]">Weather</p>
+                                        <p class="font-medium">28mm</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[var(--text-secondary)]">Stability</p>
+                                        <p class="font-medium">67%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-4 relative">
+                            <div class="w-8 h-8 rounded-full bg-[var(--card-bg)] border-2 border-[var(--accent-blue)] flex items-center justify-center flex-shrink-0 z-10">
+                                <span class="material-symbols-outlined text-[var(--accent-blue)] text-sm">check_circle</span>
+                            </div>
+                            <div class="flex-1 p-4 border border-[var(--border-color)] rounded">
+                                <div class="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h4 class="font-medium">Zone Gamma - Normal Conditions</h4>
+                                        <p class="text-sm text-[var(--text-secondary)]">15 mins ago</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-bold text-[var(--accent-blue)]">Low Risk</p>
+                                        <p class="text-sm text-[var(--text-secondary)]">96.1% confidence</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-3 gap-4 text-sm">
+                                    <div>
+                                        <p class="text-[var(--text-secondary)]">Seismic</p>
+                                        <p class="font-medium">1.8Hz</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[var(--text-secondary)]">Weather</p>
+                                        <p class="font-medium">12mm</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[var(--text-secondary)]">Stability</p>
+                                        <p class="font-medium">92%</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Technical Details -->
+            <div class="glass-card rounded-lg p-6">
+                <h3 class="text-lg font-semibold mb-4">System Information</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div>
+                        <h4 class="font-medium mb-2">Model Details</h4>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-[var(--text-secondary)]">Inference Time</span>
+                                <span>1.3ms avg</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-[var(--text-secondary)]">Predictions/Day</span>
+                                <span>{{ data.total_predictions if data else 2847 }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-[var(--text-secondary)]">Uptime</span>
+                                <span>99.7%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Real-time clock
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            document.getElementById('currentTime').textContent = timeString;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Risk Chart
+        const ctx = document.getElementById('riskChart').getContext('2d');
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
+                datasets: [
+                    {
+                        label: 'Neural Network',
+                        data: [2.3, 3.1, 4.2, 6.5, 5.8, 7.2, 6.1],
+                        borderColor: '#2ea043',
+                        backgroundColor: 'rgba(46, 160, 67, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#2ea043',
+                        pointBorderColor: '#f0f6fc',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    },
+                    {
+                        label: 'Random Forest',
+                        data: [1.8, 2.9, 3.8, 5.9, 5.2, 6.8, 5.7],
+                        borderColor: '#8b949e',
+                        backgroundColor: 'rgba(139, 148, 158, 0.1)',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.4,
+                        pointBackgroundColor: '#8b949e',
+                        pointBorderColor: '#f0f6fc',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    },
+                    {
+                        label: 'SVM',
+                        data: [2.0, 2.7, 3.9, 6.1, 5.3, 6.9, 5.9],
+                        borderColor: '#fb8500',
+                        backgroundColor: 'rgba(251, 133, 0, 0.1)',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.4,
+                        pointBackgroundColor: '#fb8500',
+                        pointBorderColor: '#f0f6fc',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: '#f0f6fc',
+                            usePointStyle: true,
+                            padding: 20,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#161b22',
+                        titleColor: '#f0f6fc',
+                        bodyColor: '#f0f6fc',
+                        borderColor: '#30363d',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: '#30363d'
+                        },
+                        ticks: {
+                            color: '#8b949e'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: '#30363d'
+                        },
+                        ticks: {
+                            color: '#8b949e'
+                        },
+                        beginAtZero: true,
+                        max: 10
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+
+        // Time frame selection
+        document.querySelectorAll('.prediction-timeframe').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.prediction-timeframe').forEach(b => {
+                    b.classList.remove('bg-[var(--accent-blue)]', 'text-white');
+                    b.classList.add('text-[var(--text-secondary)]');
+                });
+                this.classList.add('bg-[var(--accent-blue)]', 'text-white');
+                this.classList.remove('text-[var(--text-secondary)]');
+                
+                console.log('Timeframe selected:', this.dataset.timeframe);
+            });
+        });
+
+        // Generate Predictions Button
+        document.getElementById('generatePredictions').addEventListener('click', function() {
+            const originalContent = this.innerHTML;
+            this.disabled = true;
+            this.innerHTML = `
+                <span class="material-symbols-outlined text-sm animate-spin">refresh</span>
+                Generating...
+            `;
+            
+            setTimeout(() => {
+                fetch('/api/generate_predictions')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            alert('Failed to generate predictions: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Error generating predictions');
+                    })
+                    .finally(() => {
+                        this.disabled = false;
+                        this.innerHTML = originalContent;
+                    });
+            }, 1500);
+        });
+
+        // Hover effects
+        document.querySelectorAll('.metric-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+                this.style.borderColor = '#6e7681';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.borderColor = '#30363d';
+            });
+        });
+
+        // Initialize
+        console.log('MineSafe AI Prediction System initialized');
+    </script>
+</body>
+</html>
+          

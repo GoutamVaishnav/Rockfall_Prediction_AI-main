@@ -1,0 +1,2 @@
+slope_angle,slope_height,slope_curvature,joint_density,crack_length,vegetation_cover,displacement_mm,strain_micro,pore_pressure_kPa,rainfall_mm,temperature_C,vibration_mmps,risk_level
+58.1,31.5,straight,0.45,6.7,42.3,2.1,89.7,62.4,78.2,25.6,25.6,Medium

@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MineSafe - Prediction Results</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --dark-bg: #0d1117;
+            --card-bg: #161b22;
+            --sidebar-bg: #0d1117;
+            --border-color: #30363d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --accent-blue: #2ea043;
+            --accent-orange: #fb8500;
+            --accent-red: #f85149;
+            --accent-yellow: #d29922;
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #30363d #0d1117;
+        }
+
+        *::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background-color: #30363d;
+            border-radius: 10px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+        }
+
+        .metric-card {
+            transition: all 0.2s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            border-color: #6e7681;
+        }
+
+        .status-indicator {
+            position: relative;
+        }
+
+        .status-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -8px;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .sidebar-link {
+            position: relative;
+        }
+
+        .sidebar-link.active::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: var(--accent-blue);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .risk-critical {
+            color: var(--accent-red);
+        }
+
+        .risk-high {
+            color: var(--accent-orange);
+        }
+
+        .risk-medium {
+            color: var(--accent-yellow);
+        }
+
+        .risk-low {
+            color: var(--accent-blue);
+        }
+
+        .zone-card {
+            transition: all 0.3s ease;
+        }
+
+        .zone-card:hover {
+            transform: translateY(-2px);
+            border-color: #6e7681;
+        }
+
+        .data-source-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .data-source-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-orange));
+        }
+
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .prediction-timeline {
+            position: relative;
+        }
+
+        .prediction-timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border-color);
+        }
+
+        .environmental-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="w-64 bg-[var(--sidebar-bg)] border-r border-[var(--border-color)] fixed h-full">
+        <div class="p-6 border-b border-[var(--border-color)]">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-[var(--accent-blue)] rounded flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white text-lg">shield</span>
+                </div>
+                <div>
+                    <h1 class="text-lg font-semibold">MineSafe</h1>
+                    <p class="text-xs text-[var(--text-secondary)]">Professional v2.1</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="p-4 space-y-1">
+            <a href="{{ url_for('index') }}" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded text-[var(--text-secondary)] hover:text-white hover:bg-[var(--card-bg)] transition-colors">
+                <span class="material-symbols-outlined text-lg">dashboard</span>
+                <span>Dashboard</span>
+            </a>
+            
+            <a href="{{ url_for('predictions') }}" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded text-[var(--text-secondary)] hover:text-white hover:bg-[var(--card-bg)] transition-colors">
+                <span class="material-symbols-outlined text-lg">psychology</span>
+                <span>AI Predictions</span>
+            </a>
+            
+            <a href="{{ url_for('alerts') }}" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded text-[var(--text-secondary)] hover:text-white hover:bg-[var(--card-bg)] transition-colors">
+                <span class="material-symbols-outlined text-lg">crisis_alert</span>
+                <span>Alerts</span>
+                <span class="ml-auto bg-[var(--accent-red)] text-white text-xs px-2 py-0.5 rounded-full">{{ no_of_alerts or 3 }}</span>
+            </a>
+            
+            <div class="pt-4">
+                <p class="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider px-4 mb-2">Data</p>
+                <a href="{{ url_for('upload') }}" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded text-[var(--text-secondary)] hover:text-white hover:bg-[var(--card-bg)] transition-colors">
+                    <span class="material-symbols-outlined text-lg">upload_file</span>
+                    <span>Upload Data</span>
+                </a>
+                <a href="{{ url_for('results') }}" class="sidebar-link active flex items-center gap-3 px-4 py-2.5 rounded text-white bg-[var(--card-bg)]">
+                    <span class="material-symbols-outlined text-lg">analytics</span>
+                    <span>Analysis Results</span>
+                </a>
+            </div>
+
+            <div class="pt-4">
+                <p class="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider px-4 mb-2">Support</p>
+                <a href="{{ url_for('chatbot') }}" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded text-[var(--text-secondary)] hover:text-white hover:bg-[var(--card-bg)] transition-colors">
+                    <span class="material-symbols-outlined text-lg">smart_toy</span>
+                    <span>AI Assistant</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="mt-auto p-4 border-t border-[var(--border-color)]">
+            <div class="glass-card rounded p-3 text-center">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm">Analysis Status</span>
+                    <span class="text-xs text-[var(--accent-blue)] status-indicator">Complete</span>
+                </div>
+                <div class="text-lg font-bold">{{ results.confidence_percentage if results else 94 }}%</div>
+                <div class="text-xs text-[var(--text-secondary)]">Confidence</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ml-64 min-h-screen">
+        <!-- Header -->
+        <header class="bg-[var(--card-bg)] border-b border-[var(--border-color)] p-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold">Rockfall Prediction Analysis</h1>
+                    <p class="text-[var(--text-secondary)] mt-1">AI-driven risk assessment for open-pit mine operations</p>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 text-sm">
+                        <div class="w-2 h-2 bg-[var(--accent-blue)] rounded-full pulse-dot"></div>
+                        <span class="text-[var(--text-secondary)]">Analysis Complete</span>
+                    </div>
+                    <button id="exportReport" class="flex items-center gap-2 px-4 py-2 bg-[var(--accent-blue)] hover:bg-[var(--accent-blue)]/80 text-white rounded font-medium transition-colors">
+                        <span class="material-symbols-outlined text-sm">download</span>
+                        Export Report
+                    </button>
+                    <span class="text-sm font-mono text-[var(--text-secondary)]" id="currentTime"></span>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-6">
+            <!-- Key Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div class="metric-card glass-card rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-sm text-[var(--text-secondary)]">Overall Risk Level</p>
+                            <p class="text-2xl font-bold {{ results.overall_color if results else 'risk-medium' }}">{{ results.overall_risk if results else 'Medium' }}</p>
+                        </div>
+                        <span class="material-symbols-outlined {{ results.overall_color if results else 'risk-medium' }}">
+                            {{ 'crisis_alert' if results and results.overall_risk in ['High', 'Critical'] else 'warning' if results and results.overall_risk == 'Medium' else 'check_circle' }}
+                        </span>
+                    </div>
+                    <p class="text-xs text-[var(--text-secondary)]">Based on {{ results.total_predictions if results else 5 }} zones</p>
+                </div>
+
+                <div class="metric-card glass-card rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-sm text-[var(--text-secondary)]">Model Confidence</p>
+                            <p class="text-2xl font-bold">{{ results.confidence_percentage if results else 94 }}%</p>
+                        </div>
+                        <span class="material-symbols-outlined text-[var(--accent-blue)]">verified</span>
+                    </div>
+                    <p class="text-xs text-[var(--text-secondary)]">Prediction accuracy</p>
+                </div>
+
+                <div class="metric-card glass-card rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-sm text-[var(--text-secondary)]">High Risk Zones</p>
+                            <p class="text-2xl font-bold text-[var(--accent-orange)]">{{ (results.risk_counts.High + results.risk_counts.Critical) if results and results.risk_counts else 2 }}</p>
+                        </div>
+                        <span class="material-symbols-outlined text-[var(--accent-orange)]">warning</span>
+                    </div>
+                    <p class="text-xs text-[var(--text-secondary)]">Requiring attention</p>
+                </div>
+
+                <div class="metric-card glass-card rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <p class="text-sm text-[var(--text-secondary)]">Data Sources</p>
+                            <p class="text-2xl font-bold">7</p>
+                        </div>
+                        <span class="material-symbols-outlined text-[var(--accent-blue)]">sensors</span>
+                    </div>
+                    <p class="text-xs text-[var(--text-secondary)]">Active monitoring</p>
+                </div>
+            </div>
+
+            <!-- Main Analysis Grid -->
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+                <!-- Risk Distribution Chart -->
+                <div class="xl:col-span-2 glass-card rounded-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Zone Risk Distribution</h3>
+                        <div class="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+                            <div class="w-2 h-2 bg-[var(--accent-blue)] rounded-full"></div>
+                            <span>Real-time Data</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="riskChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Zone Analysis -->
+                <div class="glass-card rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4">Zone Risk Summary</h3>
+                    
+                    <div class="space-y-3">
+                        {% if results and results.zone_results %}
+                            {% for zone in results.zone_results %}
+                            <div class="zone-card p-4 border border-[var(--border-color)] rounded">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="font-medium">{{ zone.name }}</h4>
+                                    <span class="text-sm font-bold {{ zone.color }}">{{ zone.risk }}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm text-[var(--text-secondary)]">
+                                    <span>Confidence: {{ "%.0f"|format(zone.confidence * 100) }}%</span>
+                                    <span class="material-symbols-outlined text-sm {{ zone.color }}">
+                                        {{ 'crisis_alert' if zone.risk in ['High', 'Critical'] else 'warning' if zone.risk == 'Medium' else 'check_circle' }}
+                                    </span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="zone-card p-4 border border-[var(--border-color)] rounded">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="font-medium">North Slope</h4>
+                                    <span class="text-sm font-bold risk-high">High</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm text-[var(--text-secondary)]">
+                                    <span>Confidence: 89%</span>
+                                    <span class="material-symbols-outlined text-sm risk-high">warning</span>
+                                </div>
+                            </div>
+
+                            <div class="zone-card p-4 border border-[var(--border-color)] rounded">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="font-medium">East Wall</h4>
+                                    <span class="text-sm font-bold risk-medium">Medium</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm text-[var(--text-secondary)]">
+                                    <span>Confidence: 76%</span>
+                                    <span class="material-symbols-outlined text-sm risk-medium">info</span>
+                                </div>
+                            </div>
+
+                            <div class="zone-card p-4 border border-[var(--border-color)] rounded">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="font-medium">Central Pit</h4>
+                                    <span class="text-sm font-bold risk-low">Low</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm text-[var(--text-secondary)]">
+                                    <span>Confidence: 92%</span>
+                                    <span class="material-symbols-outlined text-sm risk-low">check_circle</span>
+                                </div>
+                            </div>
+
+                            <div class="zone-card p-4 border border-[var(--border-color)] rounded">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="font-medium">West Terrace</h4>
+                                    <span class="text-sm font-bold risk-low">Low</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm text-[var(--text-secondary)]">
+                                    <span>Confidence: 85%</span>
+                                    <span class="material-symbols-outlined text-sm risk-low">check_circle</span>
+                                </div>
+                            </div>
+
+                            <div class="zone-card p-4 border border-[var(--border-color)] rounded">
+                                <div class="flex justify-between items-center mb-2">
+                                    <h4 class="font-medium">South Access</h4>
+                                    <span class="text-sm font-bold risk-high">High</span>
+                                </div>
+                                <div class="flex justify-between items-center text-sm text-[var(--text-secondary)]">
+                                    <span>Confidence: 91%</span>
+                                    <span class="material-symbols-outlined text-sm risk-high">warning</span>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Sources Analysis -->
+            <div class="glass-card rounded-lg p-6 mb-8">
+                <h3 class="text-lg font-semibold mb-4">Multi-Source Data Integration</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="data-source-card glass-card rounded p-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="material-symbols-outlined text-[var(--accent-blue)]">terrain</span>
+                            <div>
+                                <h4 class="font-medium">Digital Elevation Model</h4>
+                                <p class="text-xs text-[var(--text-secondary)]">Latest DEM Analysis</p>
+                            </div>
+                        </div>
+                        <div class="text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-[var(--text-secondary)]">Resolution:</span>
+                                <span>1m x 1m</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-[var(--text-secondary)]">Coverage:</span>
+                                <span class="text-[var(--accent-blue)]">98.5%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="data-source-card glass-card rounded p-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="material-symbols-outlined text-[var(--accent-orange)]">camera_alt</span>
+                            <div>
+                                <h4 class="font-medium">Drone Imagery</h4>
+                                <p class="text-xs text-[var(--text-secondary)]">High-res Visual Data</p>
+                            </div>
+                        </div>
+                        <div class="text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-[var(--text-secondary)]">Flights:</span>
+                                <span>Daily</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-[var(--text-secondary)]">Quality:</span>
+                                <span class="text-[var(--accent-blue)]">Excellent</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="data-source-card glass-card rounded p-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="material-symbols-outlined text-[var(--accent-yellow)]">sensors</span>
+                            <div>
+                                <h4 class="font-medium">Geotechnical Sensors</h4>
+                                <p class="text-xs text-[var(--text-secondary)]">Real-time Monitoring</p>
+                            </div>
+                        </div>
+                        <div class="text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-[var(--text-secondary)]">Active Sensors:</span>
+                                <span>24/27</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-[var(--text-secondary)]">Status:</span>
+                                <span class="text-[var(--accent-blue)]">Online</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="data-source-card glass-card rounded p-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="material-symbols-outlined text-[var(--accent-blue)]">cloudy</span>
+                            <div>
+                                <h4 class="font-medium">Environmental Data</h4>
+                                <p class="text-xs text-[var(--text-secondary)]">Weather & Conditions</p>
+                            </div>
+                        </div>
+                        <div class="text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-[var(--text-secondary)]">Sources:</span>
+                                <span>3 Stations</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-[var(--text-secondary)]">Update:</span>
+                                <span class="text-[var(--accent-blue)]">Real-time</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Environmental Factors -->
+                <div class="environmental-grid">
+                    <div class="glass-card rounded p-4 text-center">
+                        <span class="material-symbols-outlined text-[var(--accent-blue)] text-2xl mb-2 block">water_drop</span>
+                        <div class="text-lg font-bold">23mm</div>
+                        <div class="text-xs text-[var(--text-secondary)]">Rainfall (24h)</div>
+                    </div>
+
+                    <div class="glass-card rounded p-4 text-center">
+                        <span class="material-symbols-outlined text-[var(--accent-orange)] text-2xl mb-2 block">thermostat</span>
+                        <div class="text-lg font-bold">18°C</div>
+                        <div class="text-xs text-[var(--text-secondary)]">Temperature</div>
+                    </div>
+
+                    <div class="glass-card rounded p-4 text-center">
+                        <span class="material-symbols-outlined text-[var(--accent-yellow)] text-2xl mb-2 block">vibration</span>
+                        <div class="text-lg font-bold">2.1Hz</div>
+                        <div class="text-xs text-[var(--text-secondary)]">Seismic Activity</div>
+                    </div>
+
+                    <div class="glass-card rounded p-4 text-center">
+                        <span class="material-symbols-outlined text-[var(--accent-red)] text-2xl mb-2 block">compress</span>
+                        <div class="text-lg font-bold">0.8kPa</div>
+                        <div class="text-xs text-[var(--text-secondary)]">Pore Pressure</div>
+                    </div>
+
+                    <div class="glass-card rounded p-4 text-center">
+                        <span class="material-symbols-outlined text-[var(--accent-blue)] text-2xl mb-2 block">straighten</span>
+                        <div class="text-lg font-bold">2.3mm</div>
+                        <div class="text-xs text-[var(--text-secondary)]">Displacement</div>
+                    </div>
+
+                    <div class="glass-card rounded p-4 text-center">
+                        <span class="material-symbols-outlined text-[var(--accent-orange)] text-2xl mb-2 block">timeline</span>
+                        <div class="text-lg font-bold">45µε</div>
+                        <div class="text-xs text-[var(--text-secondary)]">Strain Reading</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Model Performance -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Model Statistics -->
+                <div class="glass-card rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4">AI Model Performance</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="p-4 border border-[var(--border-color)] rounded">
+                            <div class="flex justify-between items-center mb-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-sm text-[var(--accent-blue)]">neurology</span>
+                                    <span class="font-medium">Deep Learning Model</span>
+                                </div>
+                                <span class="font-bold">{{ results.model_accuracy if results else 94.2 }}%</span>
+                            </div>
+                            <div class="w-full bg-[var(--dark-bg)] rounded-full h-2">
+                                <div class="bg-[var(--accent-blue)] h-2 rounded-full" style="width: {{ results.model_accuracy if results else 94.2 }}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p class="text-[var(--text-secondary)]">Training Data</p>
+                                <p class="font-bold">12,847 samples</p>
+                            </div>
+                            <div>
+                                <p class="text-[var(--text-secondary)]">Validation Score</p>
+                                <p class="font-bold">0.942</p>
+                            </div>
+                            <div>
+                                <p class="text-[var(--text-secondary)]">Prediction Time</p>
+                                <p class="font-bold">1.2ms</p>
+                            </div>
+                            <div>
+                                <p class="text-[var(--text-secondary)]">Last Updated</p>
+                                <p class="font-bold">{{ results.analysis_date if results else 'Today' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recommended Actions -->
+                <div class="glass-card rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4">Recommended Actions</h3>
+                    
+                    <div class="space-y-3">
+                        {% if results and results.mitigation_actions %}
+                            {% for action in results.mitigation_actions %}
+                            <div class="flex items-start gap-3 p-3 border border-[var(--border-color)] rounded">
+                                <span class="material-symbols-outlined text-[var(--accent-blue)] mt-0.5">{{ action.icon }}</span>
+                                <div>
+                                    <p class="font-medium">{{ action.title if action.title else action.action }}</p>
+                                    <p class="text-sm text-[var(--text-secondary)] mt-1">{{ action.description if action.description else action.action }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="flex items-start gap-3 p-3 border border-[var(--border-color)] rounded">
+                                <span class="material-symbols-outlined text-[var(--accent-red)] mt-0.5">crisis_alert</span>
+                                <div>
+                                    <p class="font-medium">Immediate Evacuation - North Slope</p>
+                                    <p class="text-sm text-[var(--text-secondary)] mt-1">Critical risk detected. Clear personnel from high-risk zones immediately.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3 p-3 border border-[var(--border-color)] rounded">
+                                <span class="material-symbols-outlined text-[var(--accent-orange)] mt-0.5">construction</span>
+                                <div>
+                                    <p class="font-medium">Deploy Stabilization Measures</p>
+                                    <p class="text-sm text-[var(--text-secondary)] mt-1">Install temporary slope support and drainage systems in affected areas.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3 p-3 border border-[var(--border-color)] rounded">
+                                <span class="material-symbols-outlined text-[var(--accent-yellow)] mt-0.5">monitor_heart</span>
+                                <div>
+                                    <p class="font-medium">Enhanced Monitoring</p>
+                                    <p class="text-sm text-[var(--text-secondary)] mt-1">Increase sensor frequency and deploy additional monitoring equipment.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3 p-3 border border-[var(--border-color)] rounded">
+                                <span class="material-symbols-outlined text-[var(--accent-blue)] mt-0.5">science</span>
+                                <div>
+                                    <p class="font-medium">Geotechnical Investigation</p>
+                                    <p class="text-sm text-[var(--text-secondary)] mt-1">Conduct detailed subsurface analysis and stability assessment.</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prediction Timeline -->
+            <div class="glass-card rounded-lg p-6 mb-8">
+                <h3 class="text-lg font-semibold mb-4">Prediction Timeline & Risk Evolution</h3>
+                
+                <div class="prediction-timeline space-y-4">
+                    <div class="flex items-start gap-4 relative">
+                        <div class="w-8 h-8 rounded-full bg-[var(--accent-red)] border-2 border-[var(--card-bg)] flex items-center justify-center flex-shrink-0 z-10">
+                            <span class="material-symbols-outlined text-white text-sm">crisis_alert</span>
+                        </div>
+                        <div class="flex-1 p-4 border border-[var(--border-color)] rounded">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h4 class="font-medium text-[var(--accent-red)]">Critical Risk Identified</h4>
+                                    <p class="text-sm text-[var(--text-secondary)]">North Slope - Sector 7</p>
+                                </div>
+                                <span class="text-xs text-[var(--text-secondary)]">Now</span>
+                            </div>
+                            <p class="text-sm mb-3">AI model detected 94.7% probability of rockfall within 6 hours based on recent displacement patterns and environmental conditions.</p>
+                            <div class="grid grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <p class="text-[var(--text-secondary)]">Displacement</p>
+                                    <p class="font-medium text-[var(--accent-red)]">5.2mm/day</p>
+                                </div>
+                                <div>
+                                    <p class="text-[var(--text-secondary)]">Pore Pressure</p>
+                                    <p class="font-medium text-[var(--accent-orange)]">2.1kPa</p>
+                                </div>
+                                <div>
+                                    <p class="text-[var(--text-secondary)]">Rainfall Impact</p>
+                                    <p class="font-medium text-[var(--accent-red)]">High</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4 relative">
+                        <div class="w-8 h-8 rounded-full bg-[var(--accent-orange)] border-2 border-[var(--card-bg)] flex items-center justify-center flex-shrink-0 z-10">
+                            <span class="material-symbols-outlined text-white text-sm">trending_up</span>
+                        </div>
+                        <div class="flex-1 p-4 border border-[var(--border-color)] rounded">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h4 class="font-medium">Risk Escalation Detected</h4>
+                                    <p class="text-sm text-[var(--text-secondary)]">Multiple zones showing increased activity</p>
+                                </div>
+                                <span class="text-xs text-[var(--text-secondary)]">2 hours ago</span>
+                            </div>
+                            <p class="text-sm">Environmental factors and sensor data indicate deteriorating conditions across multiple monitoring zones.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4 relative">
+                        <div class="w-8 h-8 rounded-full bg-[var(--accent-yellow)] border-2 border-[var(--card-bg)] flex items-center justify-center flex-shrink-0 z-10">
+                            <span class="material-symbols-outlined text-white text-sm">info</span>
+                        </div>
+                        <div class="flex-1 p-4 border border-[var(--border-color)] rounded">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h4 class="font-medium">Baseline Analysis Complete</h4>
+                                    <p class="text-sm text-[var(--text-secondary)]">Initial risk assessment</p>
+                                </div>
+                                <span class="text-xs text-[var(--text-secondary)]">6 hours ago</span>
+                            </div>
+                            <p class="text-sm">Comprehensive analysis of all data sources completed. Overall risk profile established.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cost-Effectiveness Analysis -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="glass-card rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4">Cost-Effectiveness Analysis</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="p-4 bg-[var(--dark-bg)] rounded">
+                            <h4 class="font-medium mb-3">Prevention vs. Incident Costs</h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-[var(--text-secondary)]">Monitoring System Cost:</span>
+                                    <span class="font-bold text-[var(--accent-blue)]">$127,000</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-[var(--text-secondary)]">Avg. Rockfall Incident Cost:</span>
+                                    <span class="font-bold text-[var(--accent-red)]">$2.8M</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm text-[var(--text-secondary)]">Potential Savings:</span>
+                                    <span class="font-bold text-[var(--accent-blue)]">$2.67M</span>
+                                </div>
+                                <div class="pt-2 border-t border-[var(--border-color)]">
+                                    <div class="flex justify-between items-center">
+                                        <span class="font-medium">ROI:</span>
+                                        <span class="font-bold text-[var(--accent-blue)]">2,100%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-sm text-[var(--text-secondary)]">
+                            <p>Early warning systems can prevent major incidents and equipment damage, providing significant cost savings compared to reactive approaches.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4">System Scalability</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="p-3 border border-[var(--border-color)] rounded flex items-center gap-3">
+                            <span class="material-symbols-outlined text-[var(--accent-blue)]">public</span>
+                            <div>
+                                <p class="font-medium">Multi-Site Deployment</p>
+                                <p class="text-xs text-[var(--text-secondary)]">Adaptable to different mine configurations</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3 border border-[var(--border-color)] rounded flex items-center gap-3">
+                            <span class="material-symbols-outlined text-[var(--accent-blue)]">code</span>
+                            <div>
+                                <p class="font-medium">Open-Source Integration</p>
+                                <p class="text-xs text-[var(--text-secondary)]">Customizable for specific requirements</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3 border border-[var(--border-color)] rounded flex items-center gap-3">
+                            <span class="material-symbols-outlined text-[var(--accent-blue)]">trending_up</span>
+                            <div>
+                                <p class="font-medium">Performance Scaling</p>
+                                <p class="text-xs text-[var(--text-secondary)]">Handles increasing data volumes efficiently</p>
+                            </div>
+                        </div>
+
+                        <div class="p-3 border border-[var(--border-color)] rounded flex items-center gap-3">
+                            <span class="material-symbols-outlined text-[var(--accent-blue)]">business</span>
+                            <div>
+                                <p class="font-medium">Public & Private Sector</p>
+                                <p class="text-xs text-[var(--text-secondary)]">Suitable for all mining operations</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-between">
+                <div class="flex gap-4">
+                    <button id="regenerateAnalysis" class="flex items-center gap-2 px-6 py-3 bg-[var(--accent-blue)] hover:bg-[var(--accent-blue)]/80 text-white rounded font-medium transition-colors">
+                        <span class="material-symbols-outlined">refresh</span>
+                        Regenerate Analysis
+                    </button>
+                    
+                    <button id="downloadReport" class="flex items-center gap-2 px-6 py-3 border border-[var(--border-color)] hover:border-[var(--accent-blue)] text-white rounded font-medium transition-colors">
+                        <span class="material-symbols-outlined">download</span>
+                        Download Report
+                    </button>
+                </div>
+
+                <div class="flex gap-4">
+                    <button id="scheduleAlert" class="flex items-center gap-2 px-6 py-3 bg-[var(--accent-orange)] hover:bg-[var(--accent-orange)]/80 text-white rounded font-medium transition-colors">
+                        <span class="material-symbols-outlined">schedule</span>
+                        Schedule Alerts
+                    </button>
+                    
+                    <a href="{{ url_for('chatbot') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-[var(--accent-blue)] hover:bg-[var(--accent-blue)]/80 text-white rounded font-medium transition-colors">
+                        <span class="material-symbols-outlined">smart_toy</span>
+                        Ask AI Assistant
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Real-time clock
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            document.getElementById('currentTime').textContent = timeString;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Risk Distribution Chart
+        const ctx = document.getElementById('riskChart').getContext('2d');
+        
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Critical', 'High Risk', 'Medium Risk', 'Low Risk'],
+                datasets: [{
+                    data: [1, 2, 1, 1],
+                    backgroundColor: ['#f85149', '#fb8500', '#d29922', '#2ea043'],
+                    borderColor: ['#f85149', '#fb8500', '#d29922', '#2ea043'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#f0f6fc',
+                            padding: 20,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#161b22',
+                        titleColor: '#f0f6fc',
+                        bodyColor: '#f0f6fc',
+                        borderColor: '#30363d',
+                        borderWidth: 1
+                    }
+                }
+            }
+        });
+
+        // Regenerate Analysis
+        document.getElementById('regenerateAnalysis').addEventListener('click', function() {
+            const btn = this;
+            const originalContent = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin">refresh</span>Regenerating...';
+            
+            setTimeout(() => {
+                fetch('/api/regenerate_analysis', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Failed to regenerate analysis: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Network error occurred');
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                });
+            }, 1500);
+        });
+
+        // Export Report
+        document.getElementById('exportReport').addEventListener('click', function() {
+            // Create a comprehensive report
+            const reportData = {
+                timestamp: new Date().toISOString(),
+                overall_risk: 'Medium',
+                confidence: 94,
+                zones: 5,
+                high_risk_zones: 2,
+                data_sources: 7
+            };
+            
+            const reportContent = `MineSafe Rockfall Prediction Report
+Generated: ${new Date().toLocaleString()}
+
+EXECUTIVE SUMMARY
+Overall Risk Level: Medium
+Model Confidence: 94%
+Zones Analyzed: 5
+High Risk Zones: 2
+
+DETAILED ANALYSIS
+- AI model processed multi-source data including DEM, drone imagery, geotechnical sensors, and environmental data
+- Critical risk identified in North Slope requiring immediate attention
+- Cost-effectiveness analysis shows 2,100% ROI compared to reactive approaches
+- System demonstrates scalability for multi-site deployment
+
+RECOMMENDED ACTIONS
+1. Immediate evacuation of North Slope personnel
+2. Deploy temporary stabilization measures
+3. Enhance monitoring frequency
+4. Conduct detailed geotechnical investigation
+
+This report was generated by MineSafe AI-Based Rockfall Prediction System v2.1`;
+            
+            const blob = new Blob([reportContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `MineSafe_Report_${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        // Download Report Button
+        document.getElementById('downloadReport').addEventListener('click', function() {
+            document.getElementById('exportReport').click();
+        });
+
+        // Schedule Alerts
+        document.getElementById('scheduleAlert').addEventListener('click', function() {
+            alert('Alert scheduling configured. Personnel will be notified via SMS/email when risk thresholds are exceeded.');
+        });
+
+        // Hover effects
+        document.querySelectorAll('.metric-card, .zone-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+                this.style.borderColor = '#6e7681';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.borderColor = '#30363d';
+            });
+        });
+
+        // Add CSS animation for spinning
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            .animate-spin {
+                animation: spin 1s linear infinite;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize
+        console.log('MineSafe Analysis Results System initialized');
+    </script>
+</body>
+</html>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MineSafe - Upload Data</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <style>
+        :root {
+            --primary-color: #1193d4;
+            --primary-dark: #0d7bb8;
+        }
+        body {
+            font-family: 'Inter', 'Space Grotesk', sans-serif;
+            background-color: #111618;
+        }
+    </style>
+</head>
+<body class="text-white">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-[#192633] p-6 flex flex-col">
+            <div class="flex items-center gap-3 mb-10">
+                <div class="size-8 text-white">
+                    <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 42.4379C4 42.4379 14.0962 36.0744 24 41.1692C35.0664 46.8624 44 42.2078 44 42.2078L44 7.01134C44 7.01134 35.068 11.6577 24.0031 5.96913C14.0971 0.876274 4 7.27094 4 7.27094L4 42.4379Z" fill="currentColor"></path>
+                    </svg>
+                </div>
+                <h1 class="text-xl font-bold">MineSafe</h1>
+            </div>
+            <nav class="flex flex-col gap-2 flex-grow">
+                <a href="{{ url_for('index') }}" class="flex items-center gap-3 px-4 py-2 rounded-md text-gray-400 hover:bg-[#233648] hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('predictions') }}" class="flex items-center gap-3 px-4 py-2 rounded-md text-gray-400 hover:bg-[#233648] hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">model_training</span>
+                    <span>Predictions</span>
+                </a>
+                <a href="{{ url_for('alerts') }}" class="flex items-center gap-3 px-4 py-2 rounded-md text-gray-400 hover:bg-[#233648] hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">notifications_active</span>
+                    <span>Alerts</span>
+                </a>
+                <a href="{{ url_for('upload') }}" class="flex items-center gap-3 px-4 py-2 rounded-md bg-[#233648] text-white">
+                    <span class="material-symbols-outlined">upload_file</span>
+                    <span>Upload Data</span>
+                </a>
+                <a href="{{ url_for('results') }}" class="flex items-center gap-3 px-4 py-2 rounded-md text-gray-400 hover:bg-[#233648] hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">summarize</span>
+                    <span>Results</span>
+                </a>
+                <a href="{{ url_for('chatbot') }}" class="flex items-center gap-3 px-4 py-2 rounded-md text-gray-400 hover:bg-[#233648] hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">smart_toy</span>
+                    <span>AI Assistant</span>
+                </a>
+            </nav>
+            <div class="mt-auto">
+                <button class="flex items-center gap-3 px-4 py-2 rounded-md text-gray-400 cursor-default">
+                    <span class="material-symbols-outlined">settings</span>
+                    <span>Settings</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8">
+            <header class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold">Upload Data</h1>
+                    <p class="text-gray-400">Upload a CSV file to begin the rockfall prediction process</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="p-2 rounded-full bg-[#192633] hover:bg-[#233648] transition-colors">
+                        <span class="material-symbols-outlined">notifications</span>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <div class="size-10 rounded-full bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA1vinqA5VrtThhnhWfWhSvZ_Rkj7QMn9cl6rva3UDsOgBvXzpyCXLj4GRTyAVR0dldRZsadvsHFcCzUQ1fmIRLbYN1XGdNVgB9ktT9rEXjPsAybJ2L9HCjbUvQz0xl_EVtCqh8M8uHH7_Nx1Ul3kOxmTGOKU2M6E9YoMbEB5lliXHptFft3el71vuloWSAjTsx9bLj-Wri4ZKJJegVW9qgbjEp9LV_ghzZUqeA1nSf7V1Q6AO201-pPLBUF4-KrWqC32Yg87ahfvor');"></div>
+                        <span class="material-symbols-outlined text-gray-400">expand_more</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="mx-auto flex max-w-5xl flex-col gap-8">
+                <div class="flex items-start gap-8">
+                    <div class="flex flex-1 flex-col gap-6 rounded-lg border border-[#233648] bg-[#192633] p-6">
+                        <div class="flex flex-col gap-4">
+                            <h3 class="text-lg font-bold text-white">1. Upload CSV File</h3>
+                            <label for="file-input" id="dropzone" class="flex h-48 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#324d67] bg-[#111a22] text-center text-gray-400 hover:border-[#1193d4] hover:bg-[#0f1820] transition-colors">
+                                <span class="material-symbols-outlined text-4xl">cloud_upload</span>
+                                <p class="mt-2 text-sm font-medium">Drag & drop your CSV here or <span class="font-bold text-[#1193d4]">browse</span></p>
+                                <p class="text-xs text-gray-500">Max 100 MB • .csv</p>
+                                <input id="file-input" type="file" accept=".csv,text/csv" class="hidden" />
+                            </label>
+                            <div id="file-meta" class="hidden text-sm text-gray-300 rounded-md bg-[#111a22] border border-[#324d67] p-3">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-[#1193d4]">description</span>
+                                        <span id="file-name"></span>
+                                    </div>
+                                    <span id="file-size" class="text-gray-400"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-4">
+                            <h3 class="text-lg font-bold text-white">2. Select Relevant Columns</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="flex flex-col gap-2">
+                                    <label class="text-sm font-medium text-gray-300" for="x-coordinate">X-coordinate</label>
+                                    <select class="w-full rounded-md border-[#324d67] bg-[#111a22] text-white placeholder:text-gray-400 focus:border-[#1193d4] focus:ring-[#1193d4]" id="x-coordinate">
+                                        <option value="">Select column</option>
+                                    </select>
+                                </div>
+                                <div class="flex flex-col gap-2">
+                                    <label class="text-sm font-medium text-gray-300" for="y-coordinate">Y-coordinate</label>
+                                    <select class="w-full rounded-md border-[#324d67] bg-[#111a22] text-white placeholder:text-gray-400 focus:border-[#1193d4] focus:ring-[#1193d4]" id="y-coordinate">
+                                        <option value="">Select column</option>
+                                    </select>
+                                </div>
+                                <div class="flex flex-col gap-2">
+                                    <label class="text-sm font-medium text-gray-300" for="z-coordinate">Z-coordinate</label>
+                                    <select class="w-full rounded-md border-[#324d67] bg-[#111a22] text-white placeholder:text-gray-400 focus:border-[#1193d4] focus:ring-[#1193d4]" id="z-coordinate">
+                                        <option value="">Select column</option>
+                                    </select>
+                                </div>
+                                <div class="flex flex-col gap-2">
+                                    <label class="text-sm font-medium text-gray-300" for="time">Time</label>
+                                    <select class="w-full rounded-md border-[#324d67] bg-[#111a22] text-white placeholder:text-gray-400 focus:border-[#1193d4] focus:ring-[#1193d4]" id="time">
+                                        <option value="">Select column</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <p id="mapping-hint" class="text-xs text-gray-400">Map required columns to enable prediction.</p>
+                            <button id="run-btn" disabled class="flex min-w-[140px] items-center justify-center overflow-hidden rounded-lg h-10 px-6 bg-[#253745] text-white text-sm font-bold tracking-[0.015em] disabled:opacity-60 disabled:cursor-not-allowed hover:bg-[#2d4456]">
+                                <span class="material-symbols-outlined mr-2 text-sm">play_arrow</span>
+                                <span class="truncate">Run Prediction</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1">
+                        <div class="flex flex-col gap-4 rounded-lg border border-[#233648] bg-[#192633] p-6">
+                            <h3 class="text-lg font-bold text-white">Data Preview</h3>
+                            <div id="preview-empty" class="rounded-md border border-dashed border-[#324d67] bg-[#0f1820] p-6 text-center text-gray-400">No file selected yet.</div>
+                            <div id="preview-table" class="hidden overflow-x-auto rounded-lg border border-[#324d67]">
+                                <table class="w-full text-left">
+                                    <thead class="bg-[#111a22]" id="table-head"></thead>
+                                    <tbody class="divide-y divide-[#324d67]" id="table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('file-input');
+        const fileMeta = document.getElementById('file-meta');
+        const fileNameEl = document.getElementById('file-name');
+        const fileSizeEl = document.getElementById('file-size');
+        const headEl = document.getElementById('table-head');
+        const bodyEl = document.getElementById('table-body');
+        const previewEmpty = document.getElementById('preview-empty');
+        const previewTable = document.getElementById('preview-table');
+        const selects = ['x-coordinate','y-coordinate','z-coordinate','time'].map(id=>document.getElementById(id));
+        const runBtn = document.getElementById('run-btn');
+
+        function bytesToSize(bytes){
+            const sizes=['B','KB','MB','GB'];
+            if(bytes===0) return '0 B';
+            const i=parseInt(Math.floor(Math.log(bytes)/Math.log(1024)),10);
+            return (bytes/Math.pow(1024,i)).toFixed(1)+' '+sizes[i];
+        }
+
+        function setActiveDrop(active){
+            dropzone.classList.toggle('border-[#1193d4]', active);
+            dropzone.classList.toggle('bg-[#0f1820]', active);
+        }
+
+        dropzone.addEventListener('dragover', e=>{ e.preventDefault(); setActiveDrop(true); });
+        dropzone.addEventListener('dragleave', ()=> setActiveDrop(false));
+        dropzone.addEventListener('drop', e=>{
+            e.preventDefault(); setActiveDrop(false);
+            if(e.dataTransfer.files && e.dataTransfer.files[0]){
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+        dropzone.addEventListener('click', ()=> fileInput.click());
+        fileInput.addEventListener('change', ()=>{
+            if(fileInput.files[0]) handleFile(fileInput.files[0]);
+        });
+
+        function parseCSV(text){
+            // Simple CSV parser for demo (handles quotes minimally)
+            const rows=[]; let cur=''; let row=[]; let inQuotes=false; const pushCell=()=>{ row.push(cur); cur=''; };
+            for(let i=0;i<text.length;i++){
+                const ch=text[i];
+                if(ch==='"'){
+                    if(inQuotes && text[i+1]==='"'){ cur+='"'; i++; }
+                    else inQuotes=!inQuotes;
+                } else if(ch===',' && !inQuotes){ pushCell(); }
+                else if((ch==='\n' || ch==='\r') && !inQuotes){ if(cur!=='' || row.length){ pushCell(); rows.push(row); row=[]; } }
+                else { cur+=ch; }
+            }
+            if(cur!=='' || row.length){ pushCell(); rows.push(row); }
+            // remove empty trailing rows
+            return rows.filter(r=>r.some(c=>c && c.trim()!==''));
+        }
+
+        function populateSelects(headers){
+            selects.forEach(sel=>{
+                sel.innerHTML = '<option value="">Select column</option>' + headers.map((h,i)=>`<option value="${i}">${h||('Column '+(i+1))}</option>`).join('');
+            });
+        }
+
+        function renderPreview(rows){
+            const headers = rows[0] || [];
+            headEl.innerHTML = '<tr>' + headers.map(h=>`<th class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-300">${h||''}</th>`).join('') + '</tr>';
+            const maxRows = Math.min(10, rows.length-1);
+            bodyEl.innerHTML = Array.from({length:maxRows}, (_,i)=>{
+                const r = rows[i+1] || [];
+                return '<tr>'+ r.map(c=>`<td class="px-4 py-2 text-sm text-gray-200">${(c??'')}</td>`).join('') + '</tr>';
+            }).join('');
+            previewEmpty.classList.add('hidden');
+            previewTable.classList.remove('hidden');
+        }
+
+        function validateMapping(){
+            const allChosen = selects.every(s=> s.value !== '');
+            runBtn.disabled = !allChosen;
+        }
+        selects.forEach(s=> s.addEventListener('change', validateMapping));
+
+        function handleFile(file){
+            if(!file.name.toLowerCase().endsWith('.csv')){ alert('Please select a CSV file.'); return; }
+            fileNameEl.textContent = file.name;
+            fileSizeEl.textContent = bytesToSize(file.size);
+            fileMeta.classList.remove('hidden');
+            const reader = new FileReader();
+            reader.onload = () => {
+                const text = reader.result;
+                const rows = parseCSV(text);
+                if(!rows.length){ alert('CSV appears empty.'); return; }
+                populateSelects(rows[0]);
+                renderPreview(rows);
+                validateMapping();
+            };
+            reader.readAsText(file);
+        }
+
+        runBtn.addEventListener('click', ()=>{
+            runBtn.innerHTML = '<span class="material-symbols-outlined mr-2 text-sm animate-spin">progress_activity</span>Running...';
+            setTimeout(()=>{
+                runBtn.innerHTML = '<span class="material-symbols-outlined mr-2 text-sm">check_circle</span>Done';
+                // Navigate to results page in demo
+                window.location.href = 'results.html';
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

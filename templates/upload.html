@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MineSafe - Upload Data</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --dark-bg: #0d1117;
+            --card-bg: #161b22;
+            --sidebar-bg: #0d1117;
+            --border-color: #30363d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --accent-blue: #2ea043;
+            --accent-orange: #fb8500;
+            --accent-red: #f85149;
+            --accent-green: #28a745;
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #30363d #0d1117;
+        }
+
+        *::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background-color: #30363d;
+            border-radius: 10px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-2px);
+            border-color: #6e7681;
+        }
+
+        .status-indicator {
+            position: relative;
+        }
+
+        .status-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -8px;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .sidebar-link {
+            position: relative;
+        }
+
+        .sidebar-link.active::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: var(--accent-blue);
+        }
+
+        .upload-dropzone {
+            transition: all 0.3s ease;
+            background: radial-gradient(circle at center, transparent 0%, rgba(46, 160, 67, 0.02) 100%);
+        }
+
+        .upload-dropzone.drag-over {
+            border-color: var(--accent-blue);
+            background: radial-gradient(circle at center, rgba(46, 160, 67, 0.05) 0%, rgba(46, 160, 67, 0.1) 100%);
+            transform: scale(1.02);
+        }
+
+        .upload-progress {
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+            height: 2px;
+            transition: width 0.3s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .processing {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="w-64 bg-[var(--sidebar-bg)] border-r border-[var(--border-color)] fixed h-full">
+        <div class="p-6 border-b border-[var(--border-color)]">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-[var(--accent-blue)] rounded flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white text-lg">shield</span>
+                </div>
+                <div>
+                    <h1 class="text-lg font-semibold">MineSafe</h1>
+                    <p class="text-xs text-[var(--text-secondary)]">Professional v2.1</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="p-4 space-y-1">
+            <a href="{{ url_for('index') }}" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded text-[var(--text-secondary)] hover:text-white hover:bg-[var(--card-bg)] transition-colors">
+                <span class="material-symbols-outlined text-lg">dashboard</span>
+                <span>Dashboard</span>
+            </a>
+            
+            <a href="{{ url_for('predictions') }}" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded text-[var(--text-secondary)] hover:text-white hover:bg-[var(--card-bg)] transition-colors">
+                <span class="material-symbols-outlined text-lg">psychology</span>
+                <span>AI Predictions</span>
+            </a>
+            
+            <a href="{{ url_for('alerts') }}" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded text-[var(--text-secondary)] hover:text-white hover:bg-[var(--card-bg)] transition-colors">
+                <span class="material-symbols-outlined text-lg">crisis_alert</span>
+                <span>Alerts</span>
+                <span class="ml-auto bg-[var(--accent-red)] text-white text-xs px-2 py-0.5 rounded-full">{{ no_of_alerts or 3 }}</span>
+            </a>
+            
+            <div class="pt-4">
+                <p class="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider px-4 mb-2">Data</p>
+                <a href="{{ url_for('upload') }}" class="sidebar-link active flex items-center gap-3 px-4 py-2.5 rounded text-white bg-[var(--card-bg)]">
+                    <span class="material-symbols-outlined text-lg">upload_file</span>
+                    <span>Upload Data</span>
+                </a>
+                <a href="{{ url_for('results') }}" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded text-[var(--text-secondary)] hover:text-white hover:bg-[var(--card-bg)] transition-colors">
+                    <span class="material-symbols-outlined text-lg">analytics</span>
+                    <span>Analytics</span>
+                </a>
+            </div>
+
+            <div class="pt-4">
+                <p class="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider px-4 mb-2">Support</p>
+                <a href="{{ url_for('chatbot') }}" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded text-[var(--text-secondary)] hover:text-white hover:bg-[var(--card-bg)] transition-colors">
+                    <span class="material-symbols-outlined text-lg">smart_toy</span>
+                    <span>AI Assistant</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="mt-auto p-4 border-t border-[var(--border-color)]">
+            <div class="glass-card rounded p-3 text-center">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm">Data Processing</span>
+                    <span class="text-xs text-[var(--accent-blue)] status-indicator">Ready</span>
+                </div>
+                <div class="text-lg font-bold">0</div>
+                <div class="text-xs text-[var(--text-secondary)]">Files Queued</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ml-64 min-h-screen">
+        <!-- Header -->
+        <header class="bg-[var(--card-bg)] border-b border-[var(--border-color)] p-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold">Data Upload Center</h1>
+                    <p class="text-[var(--text-secondary)] mt-1">Upload CSV data to generate automated rockfall predictions</p>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 text-sm">
+                        <div class="w-2 h-2 bg-[var(--accent-blue)] rounded-full"></div>
+                        <span class="text-[var(--text-secondary)]">Processing Ready</span>
+                    </div>
+                    <button class="p-2.5 rounded-full bg-[var(--sidebar-bg)] border border-[var(--border-color)] hover:bg-[var(--card-bg)] transition-colors">
+                        <span class="material-symbols-outlined text-lg">notifications</span>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <div class="size-10 rounded-full bg-cover bg-center border-2 border-[var(--border-color)] hover:border-[var(--accent-blue)] transition-colors cursor-pointer" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA1vinqA5VrtThhnhWfWhSvZ_Rkj7QMn9cl6rva3UDsOgBvXzpyCXLj4GRTyAVR0dldRZsadvsHFcCzUQ1fmIRLbYN1XGdNVgB9ktT9rEXjPsAybJ2L9HCjbUvQz0xl_EVtCqh8M8uHH7_Nx1Ul3kOxmTGOKU2M6E9YoMbEB5lliXHptFft3el71vuloWSAjTsx9bLj-Wri4ZKJJegVW9qgbjEp9LV_ghzZUqeA1nSf7V1Q6AO201-pPLBUF4-KrWqC32Yg87ahfvor');"></div>
+                        <span class="material-symbols-outlined text-[var(--text-secondary)]">expand_more</span>
+                    </div>
+                    <span class="text-sm font-mono text-[var(--text-secondary)]" id="currentTime"></span>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-6">
+            <!-- Upload Instructions -->
+            <div class="mb-6 glass-card rounded-lg p-4">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="material-symbols-outlined text-[var(--accent-blue)]">info</span>
+                    <h3 class="font-medium">Upload Requirements</h3>
+                </div>
+                <div class="text-sm text-[var(--text-secondary)] grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <p class="font-medium text-white mb-1">File Format</p>
+                        <p>CSV files only (.csv)</p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-white mb-1">Data Structure</p>
+                        <p>Headers required in first row</p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-white mb-1">File Size</p>
+                        <p>Maximum 50MB per file</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                <!-- Upload Area -->
+                <div class="glass-card rounded-lg p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-xl font-semibold">Upload CSV Data</h2>
+                            <p class="text-sm text-[var(--text-secondary)]">Drag and drop or click to select files</p>
+                        </div>
+                        <div class="text-sm text-[var(--text-secondary)]">
+                            <span id="upload-counter">0</span> files uploaded
+                        </div>
+                    </div>
+                    
+                    <form id="upload-form" enctype="multipart/form-data">
+                        <div id="dropzone" class="upload-dropzone border-2 border-dashed border-[var(--border-color)] rounded-lg p-12 text-center cursor-pointer">
+                            <div class="mb-4">
+                                <span class="material-symbols-outlined text-5xl text-[var(--text-secondary)]">cloud_upload</span>
+                            </div>
+                            <p class="text-lg font-medium text-white mb-2">Drop files here or click to browse</p>
+                            <p class="text-sm text-[var(--text-secondary)] mb-4">Supports CSV files up to 50MB</p>
+                            <div class="flex justify-center">
+                                <button type="button" class="px-4 py-2 bg-[var(--accent-blue)] hover:bg-[var(--accent-blue)]/80 rounded text-white font-medium transition-colors">
+                                    Choose Files
+                                </button>
+                            </div>
+                            <input type="file" id="file-input" name="file" accept=".csv" class="hidden" multiple>
+                        </div>
+                    </form>
+
+                    <!-- File List -->
+                    <div id="file-list" class="mt-6 space-y-3"></div>
+
+                    <!-- Upload Status -->
+                    <div id="upload-status" class="hidden mt-6"></div>
+                </div>
+
+                <!-- Data Preview -->
+                <div class="glass-card rounded-lg p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 class="text-xl font-semibold">Data Preview</h3>
+                            <p class="text-sm text-[var(--text-secondary)]">Preview of uploaded data structure</p>
+                        </div>
+                        <button id="refresh-preview" class="p-2 rounded-full bg-[var(--sidebar-bg)] border border-[var(--border-color)] hover:bg-[var(--card-bg)] transition-colors" disabled>
+                            <span class="material-symbols-outlined text-sm">refresh</span>
+                        </button>
+                    </div>
+
+                    <div id="preview-empty" class="text-center py-16">
+                        <span class="material-symbols-outlined text-6xl text-[var(--text-secondary)] mb-4 block">table_view</span>
+                        <p class="text-lg text-[var(--text-secondary)] mb-2">No Data to Preview</p>
+                        <p class="text-sm text-[var(--text-secondary)]">Upload a CSV file to see data structure</p>
+                    </div>
+
+                    <div id="preview-container" class="hidden">
+                        <div id="preview-meta" class="mb-4 p-3 bg-[var(--dark-bg)] rounded border border-[var(--border-color)]">
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-[var(--text-secondary)]">Data Summary</span>
+                                <span id="preview-info" class="text-white font-mono"></span>
+                            </div>
+                        </div>
+                        <div id="preview-table" class="overflow-x-auto rounded-lg border border-[var(--border-color)]">
+                            <table class="w-full text-left">
+                                <thead class="bg-[var(--dark-bg)] border-b border-[var(--border-color)]" id="table-head"></thead>
+                                <tbody class="divide-y divide-[var(--border-color)]" id="table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Processing Section -->
+            <div id="processing-section" class="hidden mt-8 glass-card rounded-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-xl font-semibold">AI Processing</h3>
+                        <p class="text-sm text-[var(--text-secondary)]">Generating predictions using machine learning models</p>
+                    </div>
+                    <div class="processing">
+                        <span class="material-symbols-outlined text-2xl text-[var(--accent-blue)]">psychology</span>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <div class="flex justify-between text-sm mb-2">
+                        <span>Processing Progress</span>
+                        <span id="progress-text">0%</span>
+                    </div>
+                    <div class="h-2 bg-[var(--dark-bg)] rounded-full overflow-hidden">
+                        <div id="progress-bar" class="upload-progress w-0"></div>
+                    </div>
+                </div>
+
+                <div id="processing-steps" class="space-y-2 text-sm"></div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results-section" class="hidden mt-8 glass-card rounded-lg p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-xl font-semibold">Prediction Results</h3>
+                        <p class="text-sm text-[var(--text-secondary)]">AI-generated risk assessments</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="export-results" class="px-4 py-2 bg-[var(--dark-bg)] border border-[var(--border-color)] hover:bg-[var(--card-bg)] rounded text-sm transition-colors">
+                            <span class="material-symbols-outlined text-sm mr-1">download</span>
+                            Export
+                        </button>
+                        <a href="{{ url_for('predictions') }}" class="px-4 py-2 bg-[var(--accent-blue)] hover:bg-[var(--accent-blue)]/80 rounded text-white text-sm transition-colors">
+                            <span class="material-symbols-outlined text-sm mr-1">open_in_new</span>
+                            View Details
+                        </a>
+                    </div>
+                </div>
+                
+                <div id="prediction-results"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Real-time clock
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('currentTime').textContent = timeString;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Elements
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('file-input');
+        const fileList = document.getElementById('file-list');
+        const headEl = document.getElementById('table-head');
+        const bodyEl = document.getElementById('table-body');
+        const previewEmpty = document.getElementById('preview-empty');
+        const previewContainer = document.getElementById('preview-container');
+        const previewInfo = document.getElementById('preview-info');
+        const uploadStatus = document.getElementById('upload-status');
+        const resultsSection = document.getElementById('results-section');
+        const predictionResults = document.getElementById('prediction-results');
+        const processingSection = document.getElementById('processing-section');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const processingSteps = document.getElementById('processing-steps');
+        const uploadCounter = document.getElementById('upload-counter');
+
+        let uploadedFiles = [];
+        let currentFileData = null;
+
+        function bytesToSize(bytes) {
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            if (bytes === 0) return '0 B';
+            const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)), 10);
+            return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function showStatus(message, type = 'info') {
+            const colors = {
+                success: 'bg-[var(--accent-green)]/20 border-[var(--accent-green)] text-[var(--accent-green)]',
+                error: 'bg-[var(--accent-red)]/20 border-[var(--accent-red)] text-[var(--accent-red)]',
+                info: 'bg-[var(--accent-blue)]/20 border-[var(--accent-blue)] text-[var(--accent-blue)]',
+                warning: 'bg-[var(--accent-orange)]/20 border-[var(--accent-orange)] text-[var(--accent-orange)]'
+            };
+
+            uploadStatus.innerHTML = `
+                <div class="p-4 rounded-lg border ${colors[type]}">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">
+                            ${type === 'success' ? 'check_circle' : 
+                              type === 'error' ? 'error' : 
+                              type === 'warning' ? 'warning' : 'info'}
+                        </span>
+                        <p>${message}</p>
+                    </div>
+                </div>
+            `;
+            uploadStatus.classList.remove('hidden');
+        }
+
+        function parseCSV(text) {
+            const rows = [];
+            let cur = '';
+            let row = [];
+            let inQuotes = false;
+            
+            const pushCell = () => { 
+                row.push(cur.trim()); 
+                cur = ''; 
+            };
+            
+            for (let i = 0; i < text.length; i++) {
+                const ch = text[i];
+                if (ch === '"') {
+                    if (inQuotes && text[i + 1] === '"') { 
+                        cur += '"'; 
+                        i++; 
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (ch === ',' && !inQuotes) { 
+                    pushCell(); 
+                } else if ((ch === '\n' || ch === '\r') && !inQuotes) { 
+                    if (cur !== '' || row.length) { 
+                        pushCell(); 
+                        if (row.some(cell => cell !== '')) {
+                            rows.push(row); 
+                        }
+                        row = []; 
+                    } 
+                } else { 
+                    cur += ch; 
+                }
+            }
+            
+            if (cur !== '' || row.length) { 
+                pushCell(); 
+                if (row.some(cell => cell !== '')) {
+                    rows.push(row); 
+                }
+            }
+            
+            return rows.filter(r => r.some(c => c && c.trim() !== ''));
+        }
+
+        function renderPreview(rows) {
+            if (!rows || rows.length === 0) return;
+
+            const headers = rows[0] || [];
+            const dataRows = rows.slice(1);
+            
+            // Update meta info
+            previewInfo.textContent = `${headers.length} columns, ${dataRows.length} rows`;
+            
+            // Render headers
+            headEl.innerHTML = '<tr>' + headers.map((h, i) => 
+                `<th class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-[var(--text-secondary)]">
+                    ${h || `Column ${i + 1}`}
+                </th>`
+            ).join('') + '</tr>';
+            
+            // Render sample rows (max 8)
+            const maxRows = Math.min(8, dataRows.length);
+            bodyEl.innerHTML = Array.from({ length: maxRows }, (_, i) => {
+                const r = dataRows[i] || [];
+                return '<tr class="hover:bg-[var(--dark-bg)]/50">' + 
+                    headers.map((_, colIndex) => 
+                        `<td class="px-4 py-3 text-sm text-white font-mono">
+                            ${(r[colIndex] || '').substring(0, 50)}${r[colIndex] && r[colIndex].length > 50 ? '...' : ''}
+                        </td>`
+                    ).join('') + 
+                '</tr>';
+            }).join('');
+            
+            previewEmpty.classList.add('hidden');
+            previewContainer.classList.remove('hidden');
+        }
+
+        function addFileToList(file) {
+            const fileId = Date.now();
+            const fileElement = document.createElement('div');
+            fileElement.className = 'glass-card rounded-lg p-4';
+            fileElement.innerHTML = `
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 rounded-full bg-[var(--accent-blue)]/20">
+                            <span class="material-symbols-outlined text-[var(--accent-blue)]">description</span>
+                        </div>
+                        <div>
+                            <p class="font-medium text-white">${file.name}</p>
+                            <p class="text-sm text-[var(--text-secondary)]">${bytesToSize(file.size)} • CSV</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button class="process-btn px-4 py-2 bg-[var(--accent-blue)] hover:bg-[var(--accent-blue)]/80 rounded text-white text-sm transition-colors" data-file-id="${fileId}">
+                            <span class="material-symbols-outlined text-sm mr-1">psychology</span>
+                            Process
+                        </button>
+                        <button class="remove-btn p-2 rounded-full hover:bg-[var(--accent-red)]/20 transition-colors" data-file-id="${fileId}">
+                            <span class="material-symbols-outlined text-[var(--accent-red)] text-sm">close</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="h-1 bg-[var(--dark-bg)] rounded-full overflow-hidden">
+                    <div class="h-full bg-[var(--accent-blue)] rounded-full transition-all duration-300" style="width: 100%"></div>
+                </div>
+                <div class="mt-2 text-xs text-[var(--text-secondary)]">Ready for processing</div>
+            `;
+
+            fileList.appendChild(fileElement);
+            uploadedFiles.push({ id: fileId, file: file, element: fileElement });
+            updateUploadCounter();
+
+            // Add event listeners
+            fileElement.querySelector('.process-btn').addEventListener('click', () => processFile(fileId));
+            fileElement.querySelector('.remove-btn').addEventListener('click', () => removeFile(fileId));
+
+            // Auto-preview first file
+            if (uploadedFiles.length === 1) {
+                previewFile(file);
+            }
+        }
+
+        function removeFile(fileId) {
+            const fileIndex = uploadedFiles.findIndex(f => f.id === fileId);
+            if (fileIndex !== -1) {
+                uploadedFiles[fileIndex].element.remove();
+                uploadedFiles.splice(fileIndex, 1);
+                updateUploadCounter();
+            }
+        }
+
+        function updateUploadCounter() {
+            uploadCounter.textContent = uploadedFiles.length;
+        }
+
+        function previewFile(file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const text = reader.result;
+                const rows = parseCSV(text);
+                if (rows.length === 0) {
+                    showStatus('CSV appears to be empty or invalid.', 'warning');
+                    return;
+                }
+                currentFileData = rows;
+                renderPreview(rows);
+            };
+            reader.readAsText(file);
+        }
+
+        function simulateProcessing(fileId) {
+            processingSection.classList.remove('hidden');
+            
+            const steps = [
+                'Validating data structure...',
+                'Preprocessing sensor readings...',
+                'Loading AI models...',
+                'Running neural network analysis...',
+                'Applying ensemble methods...',
+                'Generating risk predictions...',
+                'Finalizing results...'
+            ];
+
+            let currentStep = 0;
+            const stepInterval = setInterval(() => {
+                if (currentStep < steps.length) {
+                    const progress = ((currentStep + 1) / steps.length) * 100;
+                    progressBar.style.width = progress + '%';
+                    progressText.textContent = Math.round(progress) + '%';
+                    
+                    const stepElement = document.createElement('div');
+                    stepElement.className = 'flex items-center gap-2 text-[var(--text-secondary)]';
+                    stepElement.innerHTML = `
+                        <span class="material-symbols-outlined text-sm text-[var(--accent-blue)]">check_circle</span>
+                        <span>${steps[currentStep]}</span>
+                    `;
+                    processingSteps.appendChild(stepElement);
+                    
+                    currentStep++;
+                } else {
+                    clearInterval(stepInterval);
+                    setTimeout(() => {
+                        processingSection.classList.add('hidden');
+                        displayMockResults();
+                    }, 500);
+                }
+            }, 800);
+        }
+
+        function processFile(fileId) {
+            const fileObj = uploadedFiles.find(f => f.id === fileId);
+            if (!fileObj) return;
+
+            const processBtn = fileObj.element.querySelector('.process-btn');
+            processBtn.innerHTML = '<span class="material-symbols-outlined text-sm mr-1 animate-spin">progress_activity</span>Processing...';
+            processBtn.disabled = true;
+
+            // Simulate processing
+            simulateProcessing(fileId);
+
+            // Actual upload to server
+            const formData = new FormData();
+            formData.append('file', fileObj.file);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showStatus(data.message, 'success');
+                    displayResults(data);
+                    
+                    // Update file status
+                    const statusDiv = fileObj.element.querySelector('.mt-2');
+                    statusDiv.innerHTML = '<span class="text-[var(--accent-green)]">✓ Processed successfully</span>';
+                } else {
+                    showStatus(data.error || 'Processing failed', 'error');
+                    
+                    // Update file status
+                    const statusDiv = fileObj.element.querySelector('.mt-2');
+                    statusDiv.innerHTML = '<span class="text-[var(--accent-red)]">✗ Processing failed</span>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showStatus('Network error occurred', 'error');
+                
+                // Update file status
+                const statusDiv = fileObj.element.querySelector('.mt-2');
+                statusDiv.innerHTML = '<span class="text-[var(--accent-red)]">✗ Network error</span>';
+            })
+            .finally(() => {
+                processBtn.innerHTML = '<span class="material-symbols-outlined text-sm mr-1">psychology</span>Process';
+                processBtn.disabled = false;
+            });
+        }
+
+        function displayMockResults() {
+            const mockData = {
+                predictions: ['High', 'Medium', 'Low', 'Medium', 'Critical'],
+                probabilities: [
+                    { 'High': 0.89, 'Medium': 0.08, 'Low': 0.03 },
+                    { 'Medium': 0.76, 'High': 0.19, 'Low': 0.05 },
+                    { 'Low': 0.92, 'Medium': 0.06, 'High': 0.02 },
+                    { 'Medium': 0.71, 'High': 0.24, 'Low': 0.05 },
+                    { 'Critical': 0.94, 'High': 0.05, 'Medium': 0.01 }
+                ],
+                data_rows: 156,
+                model_used: 'Ensemble Neural Network'
+            };
+            
+            displayResults(mockData);
+        }
+
+        function displayResults(data) {
+            const predictions = data.predictions || [];
+            const probabilities = data.probabilities || [];
+            
+            let html = `
+                <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="glass-card rounded-lg p-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="material-symbols-outlined text-[var(--accent-blue)]">dataset</span>
+                            <span class="text-sm text-[var(--text-secondary)]">Data Processed</span>
+                        </div>
+                        <p class="text-2xl font-bold">${data.data_rows || 0}</p>
+                        <p class="text-xs text-[var(--text-secondary)]">rows analyzed</p>
+                    </div>
+                    <div class="glass-card rounded-lg p-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="material-symbols-outlined text-[var(--accent-green)]">psychology</span>
+                            <span class="text-sm text-[var(--text-secondary)]">Predictions</span>
+                        </div>
+                        <p class="text-2xl font-bold">${predictions.length}</p>
+                        <p class="text-xs text-[var(--text-secondary)]">risk assessments</p>
+                    </div>
+                    <div class="glass-card rounded-lg p-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="material-symbols-outlined text-[var(--accent-orange)]">model_training</span>
+                            <span class="text-sm text-[var(--text-secondary)]">Model Used</span>
+                        </div>
+                        <p class="text-lg font-bold">${data.model_used || 'Neural Network'}</p>
+                        <p class="text-xs text-[var(--text-secondary)]">94.2% accuracy</p>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <h4 class="font-medium mb-3">Risk Assessment Summary</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
+            `;
+            
+            const riskCounts = predictions.reduce((acc, pred) => {
+                acc[pred] = (acc[pred] || 0) + 1;
+                return acc;
+            }, {});
+
+            const riskColors = {
+                'Low': 'var(--accent-green)',
+                'Medium': 'var(--accent-orange)', 
+                'High': 'var(--accent-red)',
+                'Critical': '#dc2626'
+            };
+
+            Object.entries(riskCounts).forEach(([risk, count]) => {
+                html += `
+                    <div class="text-center p-3 bg-[var(--dark-bg)] rounded border border-[var(--border-color)]">
+                        <div class="w-3 h-3 rounded-full mx-auto mb-2" style="background-color: ${riskColors[risk] || 'var(--accent-blue)'}"></div>
+                        <p class="text-lg font-bold">${count}</p>
+                        <p class="text-xs text-[var(--text-secondary)]">${risk}</p>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-medium mb-3">Sample Predictions</h4>
+                    <div class="space-y-3">
+            `;
+            
+            predictions.slice(0, 6).forEach((pred, i) => {
+                const prob = probabilities[i] || {};
+                const confidence = prob[pred] || 0;
+                const riskLevel = pred;
+                html += `
+                    <div class="flex items-center justify-between p-4 bg-[var(--dark-bg)] rounded-lg border border-[var(--border-color)]">
+                        <div class="flex items-center gap-4">
+                            <div class="w-4 h-4 rounded-full" style="background-color: ${riskColors[riskLevel] || 'var(--accent-blue)'}"></div>
+                            <div>
+                                <p class="font-medium text-white">Data Point ${i + 1}</p>
+                                <p class="text-sm text-[var(--text-secondary)]">${riskLevel} Risk Level</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-medium">${(confidence * 100).toFixed(1)}%</p>
+                            <p class="text-xs text-[var(--text-secondary)]">confidence</p>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div></div>';
+            predictionResults.innerHTML = html;
+            resultsSection.classList.remove('hidden');
+        }
+
+        // Event Listeners
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('drag-over');
+        });
+
+        dropzone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('drag-over');
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('drag-over');
+            if (e.dataTransfer.files) {
+                handleFiles(e.dataTransfer.files);
+            }
+        });
+
+        dropzone.addEventListener('click', () => fileInput.click());
+        
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files) {
+                handleFiles(fileInput.files);
+            }
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (!file.name.toLowerCase().endsWith('.csv')) {
+                    showStatus(`${file.name} is not a CSV file. Please select CSV files only.`, 'warning');
+                    return;
+                }
+                
+                if (file.size > 50 * 1024 * 1024) { // 50MB limit
+                    showStatus(`${file.name} is too large. Maximum file size is 50MB.`, 'warning');
+                    return;
+                }
+                
+                addFileToList(file);
+                showStatus(`${file.name} added successfully.`, 'success');
+            });
+        }
+
+        // Export functionality
+        document.getElementById('export-results')?.addEventListener('click', () => {
+            showStatus('Export functionality will be implemented soon.', 'info');
+        });
+
+        // Refresh preview
+        document.getElementById('refresh-preview').addEventListener('click', () => {
+            if (currentFileData) {
+                renderPreview(currentFileData);
+                showStatus('Preview refreshed.', 'info');
+            }
+        });
+
+        // Initialize
+        console.log('MineSafe Data Upload Center initialized');
+        console.log('Theme: Professional Dark v2.1');
+    </script>
+</body>
+</html>

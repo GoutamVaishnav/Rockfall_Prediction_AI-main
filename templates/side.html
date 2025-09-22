@@ -1,0 +1,65 @@
+<!-- side.html -->
+<aside id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-white border-r border-border z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+    <!-- Logo Section -->
+    <div class="p-6 border-b border-border">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                <i class="fas fa-mountain text-white text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-text-primary">MineSafe</h1>
+                <p class="text-xs text-text-secondary">AI Prediction System</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Navigation -->
+    <nav class="p-4 space-y-2">
+        <a href="#" class="sidebar-link active flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium">
+            <i class="fas fa-tachometer-alt w-5"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="{{ url_for('upload') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+            <i class="fas fa-cloud-upload-alt w-5"></i>
+            <span>Upload Data</span>
+        </a>
+        <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+            <i class="fas fa-brain w-5"></i>
+            <span>Predictions</span>
+        </a>
+        <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+            <i class="fas fa-exclamation-triangle w-5"></i>
+            <span>Alerts</span>
+        </a>
+        <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+            <i class="fas fa-satellite-dish w-5"></i>
+            <span>Sensors</span>
+        </a>
+        <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+            <i class="fas fa-chart-line w-5"></i>
+            <span>Results</span>
+        </a>
+        <a href="#" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-text-secondary">
+            <i class="fas fa-robot w-5"></i>
+            <span>AI Assistant</span>
+        </a>
+    </nav>
+    
+    <!-- Bottom Section -->
+    <div class="absolute bottom-6 left-4 right-4">
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-white text-sm"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-text-primary">Admin User</p>
+                    <p class="text-xs text-text-secondary">System Manager</p>
+                </div>
+                <button class="text-text-secondary hover:text-text-primary">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</aside>

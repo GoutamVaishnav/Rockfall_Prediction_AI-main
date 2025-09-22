@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MineSafe - Sensor Data Collection</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <style>
+        :root {
+            --primary-color: #1193d4;
+            --primary-dark: #0d7bb8;
+        }
+        body {
+            font-family: 'Inter', 'Space Grotesk', sans-serif;
+            background-color: #111618;
+        }
+        .sensor-card {
+            transition: all 0.3s ease;
+        }
+        .sensor-card:hover {
+            transform: translateY(-2px);
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="text-white">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-[#192633] p-6 flex flex-col">
+            <div class="flex items-center gap-3 mb-10">
+                <div class="size-8 text-white">
+                    <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 42.4379C4 42.4379 14.0962 36.0744 24 41.1692C35.0664 46.8624 44 42.2078 44 42.2078L44 7.01134C44 7.01134 35.068 11.6577 24.0031 5.96913C14.0971 0.876274 4 7.27094 4 7.27094L4 42.4379Z" fill="currentColor"></path>
+                    </svg>
+                </div>
+                <h1 class="text-xl font-bold">MineSafe</h1>
+            </div>
+            <nav class="flex flex-col gap-2 flex-grow">
+                <a href="index.html" class="flex items-center gap-3 px-4 py-2 rounded-md text-gray-400 hover:bg-[#233648] hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="prediction.html" class="flex items-center gap-3 px-4 py-2 rounded-md text-gray-400 hover:bg-[#233648] hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">model_training</span>
+                    <span>Predictions</span>
+                </a>
+                <a href="sensors.html" class="flex items-center gap-3 px-4 py-2 rounded-md bg-[#233648] text-white">
+                    <span class="material-symbols-outlined">sensors</span>
+                    <span>Sensor Data</span>
+                </a>
+                <a href="alerts.html" class="flex items-center gap-3 px-4 py-2 rounded-md text-gray-400 hover:bg-[#233648] hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">notifications_active</span>
+                    <span>Alerts</span>
+                </a>
+                <a href="upload.html" class="flex items-center gap-3 px-4 py-2 rounded-md text-gray-400 hover:bg-[#233648] hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">upload_file</span>
+                    <span>Upload Data</span>
+                </a>
+                <a href="results.html" class="flex items-center gap-3 px-4 py-2 rounded-md text-gray-400 hover:bg-[#233648] hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">summarize</span>
+                    <span>Results</span>
+                </a>
+                <a href="chatbot.html" class="flex items-center gap-3 px-4 py-2 rounded-md text-gray-400 hover:bg-[#233648] hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">smart_toy</span>
+                    <span>AI Assistant</span>
+                </a>
+            </nav>
+            <div class="mt-auto">
+                <a href="settings.html" class="flex items-center gap-3 px-4 py-2 rounded-md text-gray-400 hover:bg-[#233648] hover:text-white transition-colors">
+                    <span class="material-symbols-outlined">settings</span>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8">
+            <header class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold">Sensor Data Collection</h1>
+                    <p class="text-gray-400">Monitor real-time sensor data and run predictions</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="p-2 rounded-full bg-[#192633] hover:bg-[#233648] transition-colors">
+                        <span class="material-symbols-outlined">notifications</span>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <div class="size-10 rounded-full bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA1vinqA5VrtThhnhWfWhSvZ_Rkj7QMn9cl6rva3UDsOgBvXzpyCXLj4GRTyAVR0dldRZsadvsHFcCzUQ1fmIRLbYN1XGdNVgB9ktT9rEXjPsAybJ2L9HCjbUvQz0xl_EVtCqh8M8uHH7_Nx1Ul3kOxmTGOKU2M6E9YoMbEB5lliXHptFft3el71vuloWSAjTsx9bLj-Wri4ZKJJegVW9qgbjEp9LV_ghzZUqeA1nSf7V1Q6AO201-pPLBUF4-KrWqC32Yg87ahfvor');"></div>
+                        <span class="material-symbols-outlined text-gray-400">expand_more</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Sensor Status Overview -->
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-[#1a2024] p-6 rounded-lg border border-[#283339]">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-400">Active Sensors</p>
+                            <p class="text-3xl font-bold mt-2">12</p>
+                        </div>
+                        <div class="p-3 rounded-full bg-green-500/20">
+                            <span class="material-symbols-outlined text-green-500">sensors</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-sm text-gray-400">
+                        <p>All sensors online</p>
+                    </div>
+                </div>
+                
+                <div class="bg-[#1a2024] p-6 rounded-lg border border-[#283339]">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-400">Data Points</p>
+                            <p class="text-3xl font-bold mt-2">2,847</p>
+                        </div>
+                        <div class="p-3 rounded-full bg-blue-500/20">
+                            <span class="material-symbols-outlined text-blue-500">analytics</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-sm text-gray-400">
+                        <p>Last 24 hours</p>
+                    </div>
+                </div>
+                
+                <div class="bg-[#1a2024] p-6 rounded-lg border border-[#283339]">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-400">Risk Level</p>
+                            <p class="text-3xl font-bold mt-2 text-yellow-500">Medium</p>
+                        </div>
+                        <div class="p-3 rounded-full bg-yellow-500/20">
+                            <span class="material-symbols-outlined text-yellow-500">warning</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-sm text-gray-400">
+                        <p>Based on current data</p>
+                    </div>
+                </div>
+                
+                <div class="bg-[#1a2024] p-6 rounded-lg border border-[#283339]">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-gray-400">Last Update</p>
+                            <p class="text-3xl font-bold mt-2">2m</p>
+                        </div>
+                        <div class="p-3 rounded-full bg-green-500/20">
+                            <span class="material-symbols-outlined text-green-500 pulse">sync</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-sm text-gray-400">
+                        <p>Real-time monitoring</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sensor Data Collection -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- Sensor Readings -->
+                <div class="bg-[#1a2024] p-6 rounded-lg border border-[#283339]">
+                    <h2 class="text-xl font-bold mb-6">Live Sensor Readings</h2>
+                    <div class="space-y-4">
+                        <div class="sensor-card bg-[#192633] p-4 rounded-lg">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-medium">Seismic Sensor #1</h3>
+                                <span class="text-green-500 text-sm">Online</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p class="text-gray-400">Magnitude</p>
+                                    <p class="text-white font-bold">2.3</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400">Frequency</p>
+                                    <p class="text-white font-bold">15.2 Hz</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="sensor-card bg-[#192633] p-4 rounded-lg">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-medium">Tilt Sensor #2</h3>
+                                <span class="text-green-500 text-sm">Online</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p class="text-gray-400">X-Axis</p>
+                                    <p class="text-white font-bold">1.2°</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400">Y-Axis</p>
+                                    <p class="text-white font-bold">-0.8°</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="sensor-card bg-[#192633] p-4 rounded-lg">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-medium">Weather Station #3</h3>
+                                <span class="text-green-500 text-sm">Online</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p class="text-gray-400">Temperature</p>
+                                    <p class="text-white font-bold">24°C</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400">Humidity</p>
+                                    <p class="text-white font-bold">68%</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="sensor-card bg-[#192633] p-4 rounded-lg">
+                            <div class="flex justify-between items-center mb-2">
+                                <h3 class="font-medium">Pressure Sensor #4</h3>
+                                <span class="text-green-500 text-sm">Online</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p class="text-gray-400">Pressure</p>
+                                    <p class="text-white font-bold">1013.2 hPa</p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400">Change Rate</p>
+                                    <p class="text-white font-bold">+0.1/h</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prediction Interface -->
+                <div class="bg-[#1a2024] p-6 rounded-lg border border-[#283339]">
+                    <h2 class="text-xl font-bold mb-6">Run Prediction</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Select Sensor Data</label>
+                            <div class="space-y-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500" checked>
+                                    <span class="ml-2 text-sm text-gray-300">Seismic Data (Magnitude, Frequency)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500" checked>
+                                    <span class="ml-2 text-sm text-gray-300">Tilt Measurements (X, Y axes)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500" checked>
+                                    <span class="ml-2 text-sm text-gray-300">Weather Conditions</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500" checked>
+                                    <span class="ml-2 text-sm text-gray-300">Pressure Readings</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Prediction Timeframe</label>
+                            <select class="w-full px-3 py-2 bg-[#192633] border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="1h">Next 1 Hour</option>
+                                <option value="6h" selected>Next 6 Hours</option>
+                                <option value="24h">Next 24 Hours</option>
+                                <option value="7d">Next 7 Days</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Mining Zone</label>
+                            <select class="w-full px-3 py-2 bg-[#192633] border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="zone-a">Zone A (North)</option>
+                                <option value="zone-b" selected>Zone B (East)</option>
+                                <option value="zone-c">Zone C (South)</option>
+                                <option value="zone-d">Zone D (West)</option>
+                            </select>
+                        </div>
+                        
+                        <button onclick="runPrediction()" class="w-full bg-[#1193d4] hover:bg-[#0d7bb8] text-white font-bold py-3 px-4 rounded-md transition-colors flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined">model_training</span>
+                            <span>Run Prediction</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prediction Results -->
+            <div id="prediction-results" class="hidden bg-[#1a2024] p-6 rounded-lg border border-[#283339] mb-8">
+                <h2 class="text-xl font-bold mb-6">Prediction Results</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-[#192633] p-4 rounded-lg">
+                        <h3 class="font-medium mb-2">Risk Assessment</h3>
+                        <div class="text-center">
+                            <div class="text-4xl font-bold text-yellow-500 mb-2">Medium</div>
+                            <div class="w-full bg-gray-700 rounded-full h-2">
+                                <div class="bg-yellow-500 h-2 rounded-full" style="width: 65%"></div>
+                            </div>
+                            <p class="text-sm text-gray-400 mt-2">65% Risk Level</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-[#192633] p-4 rounded-lg">
+                        <h3 class="font-medium mb-2">Confidence Score</h3>
+                        <div class="text-center">
+                            <div class="text-4xl font-bold text-green-500 mb-2">87%</div>
+                            <p class="text-sm text-gray-400">High Confidence</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-[#192633] p-4 rounded-lg">
+                        <h3 class="font-medium mb-2">Recommended Action</h3>
+                        <div class="text-center">
+                            <div class="text-lg font-bold text-yellow-500 mb-2">Monitor</div>
+                            <p class="text-sm text-gray-400">Continue monitoring with increased frequency</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <h3 class="font-medium mb-4">Detailed Analysis</h3>
+                    <div class="bg-[#192633] p-4 rounded-lg">
+                        <p class="text-sm text-gray-300 mb-2">
+                            Based on the current sensor readings, the model predicts a moderate risk of rockfall in Zone B over the next 6 hours. 
+                            The seismic activity shows slight increases in magnitude, and tilt sensors indicate minor ground movement. 
+                            Weather conditions are stable, which reduces the overall risk factor.
+                        </p>
+                        <p class="text-sm text-gray-300">
+                            <strong>Key Factors:</strong> Seismic magnitude 2.3, tilt angle 1.2°, stable weather conditions, pressure changes within normal range.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Export -->
+            <div class="bg-[#1a2024] p-6 rounded-lg border border-[#283339]">
+                <h2 class="text-xl font-bold mb-4">Data Management</h2>
+                <div class="flex flex-wrap gap-4">
+                    <button class="flex items-center gap-2 px-4 py-2 bg-[#1193d4] hover:bg-[#0d7bb8] text-white rounded-md transition-colors">
+                        <span class="material-symbols-outlined">download</span>
+                        <span>Export Sensor Data</span>
+                    </button>
+                    <button class="flex items-center gap-2 px-4 py-2 bg-[#192633] hover:bg-[#233648] text-white rounded-md transition-colors">
+                        <span class="material-symbols-outlined">history</span>
+                        <span>View Historical Data</span>
+                    </button>
+                    <button class="flex items-center gap-2 px-4 py-2 bg-[#192633] hover:bg-[#233648] text-white rounded-md transition-colors">
+                        <span class="material-symbols-outlined">settings</span>
+                        <span>Sensor Settings</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function runPrediction() {
+            // Show loading state
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = '<span class="material-symbols-outlined animate-spin">sync</span><span>Processing...</span>';
+            button.disabled = true;
+            
+            // Simulate API call delay
+            setTimeout(() => {
+                // Show results
+                document.getElementById('prediction-results').classList.remove('hidden');
+                
+                // Reset button
+                button.innerHTML = originalText;
+                button.disabled = false;
+                
+                // Scroll to results
+                document.getElementById('prediction-results').scrollIntoView({ behavior: 'smooth' });
+            }, 2000);
+        }
+
+        // Simulate real-time data updates
+        function updateSensorData() {
+            // This would normally fetch real data from sensors
+            // For demo purposes, we'll just update the display
+            const lastUpdate = document.querySelector('.text-3xl.font-bold.mt-2');
+            if (lastUpdate && lastUpdate.textContent.includes('m')) {
+                const minutes = parseInt(lastUpdate.textContent);
+                lastUpdate.textContent = minutes < 10 ? `${minutes + 1}m` : '1m';
+            }
+        }
+
+        // Update data every 30 seconds
+        setInterval(updateSensorData, 30000);
+    </script>
+</body>
+</html>

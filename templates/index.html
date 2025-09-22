@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MineSafe - Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --dark-bg: #0d1117;
+            --card-bg: #161b22;
+            --sidebar-bg: #0d1117;
+            --border-color: #30363d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --accent-blue: #2ea043;
+            --accent-orange: #fb8500;
+            --accent-red: #f85149;
+            --accent-yellow: #f1c40f;
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #30363d #0d1117;
+        }
+
+        *::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background-color: #30363d;
+            border-radius: 10px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-2px);
+            border-color: #6e7681;
+        }
+
+        .status-indicator {
+            position: relative;
+        }
+
+        .status-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -8px;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .sidebar-link {
+            position: relative;
+        }
+
+        .sidebar-link.active::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: var(--accent-blue);
+        }
+
+        .quick-action-card {
+            transition: all 0.2s ease;
+        }
+
+        .quick-action-card:hover {
+            transform: translateY(-4px);
+            background: #2a4058 !important;
+        }
+
+        .activity-item {
+            transition: all 0.2s ease;
+        }
+
+        .activity-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="w-64 bg-[var(--sidebar-bg)] border-r border-[var(--border-color)] fixed h-full">
+        <div class="p-6 border-b border-[var(--border-color)]">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-[var(--accent-blue)] rounded flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white text-lg">shield</span>
+                </div>
+                <div>
+                    <h1 class="text-lg font-semibold">MineSafe</h1>
+                    <p class="text-xs text-[var(--text-secondary)]">Professional v2.1</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="p-4 space-y-1">
+            <a href="{{ url_for('index') }}" class="sidebar-link active flex items-center gap-3 px-4 py-2.5 rounded text-white bg-[var(--card-bg)]">
+                <span class="material-symbols-outlined text-lg">dashboard</span>
+                <span>Dashboard</span>
+            </a>
+            
+            <a href="{{ url_for('predictions') }}" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded text-[var(--text-secondary)] hover:text-white hover:bg-[var(--card-bg)] transition-colors">
+                <span class="material-symbols-outlined text-lg">psychology</span>
+                <span>AI Predictions</span>
+            </a>
+            
+            <a href="{{ url_for('alerts') }}" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded text-[var(--text-secondary)] hover:text-white hover:bg-[var(--card-bg)] transition-colors">
+                <span class="material-symbols-outlined text-lg">crisis_alert</span>
+                <span>Alerts</span>
+                <span class="ml-auto bg-[var(--accent-red)] text-white text-xs px-2 py-0.5 rounded-full">{{ no_of_alerts or 3 }}</span>
+            </a>
+            
+            <div class="pt-4">
+                <p class="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider px-4 mb-2">Data</p>
+                <a href="{{ url_for('upload') }}" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded text-[var(--text-secondary)] hover:text-white hover:bg-[var(--card-bg)] transition-colors">
+                    <span class="material-symbols-outlined text-lg">upload_file</span>
+                    <span>Upload Data</span>
+                </a>
+                <a href="{{ url_for('results') }}" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded text-[var(--text-secondary)] hover:text-white hover:bg-[var(--card-bg)] transition-colors">
+                    <span class="material-symbols-outlined text-lg">analytics</span>
+                    <span>Analytics</span>
+                </a>
+            </div>
+
+            <div class="pt-4">
+                <p class="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider px-4 mb-2">Support</p>
+                <a href="{{ url_for('chatbot') }}" class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded text-[var(--text-secondary)] hover:text-white hover:bg-[var(--card-bg)] transition-colors">
+                    <span class="material-symbols-outlined text-lg">smart_toy</span>
+                    <span>AI Assistant</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="mt-auto p-4 border-t border-[var(--border-color)]">
+            <div class="glass-card rounded p-3 text-center">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm">System Health</span>
+                    <span class="text-xs text-[var(--accent-blue)] status-indicator">Optimal</span>
+                </div>
+                <div class="text-lg font-bold">99.7%</div>
+                <div class="text-xs text-[var(--text-secondary)]">Uptime</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ml-64 min-h-screen">
+        <!-- Header -->
+        <header class="bg-[var(--card-bg)] border-b border-[var(--border-color)] p-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold">Dashboard Overview</h1>
+                    <p class="text-[var(--text-secondary)] mt-1">Monitor your rockfall prediction system in real-time</p>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <button class="p-2.5 rounded-full bg-[var(--sidebar-bg)] border border-[var(--border-color)] hover:bg-[var(--card-bg)] transition-colors">
+                        <span class="material-symbols-outlined text-lg">notifications</span>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <div 
+                            id="getLocationBtn" 
+                            class="size-10 rounded-full bg-cover bg-center cursor-pointer border-2 border-[var(--border-color)] hover:border-[var(--accent-blue)] transition-colors" 
+                            style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA1vinqA5VrtThhnhWfWhSvZ_Rkj7QMn9cl6rva3UDsOgBvXzpyCXLj4GRTyAVR0dldRZsadvsHFcCzUQ1fmIRLbYN1XGdNVgB9ktT9rEXjPsAybJ2L9HCjbUvQz0xl_EVtCqh8M8uHH7_Nx1Ul3kOxmTGOKU2M6E9YoMbEB5lliXHptFft3el71vuloWSAjTsx9bLj-Wri4ZKJJegVW9qgbjEp9LV_ghzZUqeA1nSf7V1Q6AO201-pPLBUF4-KrWqC32Yg87ahfvor');">
+                        </div>
+                        <span class="material-symbols-outlined text-[var(--text-secondary)]">expand_more</span>
+                    </div>
+                    <span class="text-sm font-mono text-[var(--text-secondary)]" id="currentTime"></span>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-6">
+            <!-- Key Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="glass-card rounded-lg p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-sm text-[var(--text-secondary)] mb-1">Current Risk Level</p>
+                            <p class="text-3xl font-bold">{{ risk or 'Medium' }}</p>
+                        </div>
+                        <div class="p-3 rounded-full bg-[var(--accent-yellow)]/20">
+                            <span class="material-symbols-outlined text-[var(--accent-yellow)] text-xl">warning</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="h-2 w-full bg-[var(--sidebar-bg)] rounded-full overflow-hidden">
+                            <div class="h-full bg-[var(--accent-yellow)] rounded-full transition-all duration-500" style="width: 65%"></div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-[var(--text-secondary)]">65% of maximum threshold</p>
+                </div>
+                
+                <div class="glass-card rounded-lg p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-sm text-[var(--text-secondary)] mb-1">Active Alerts</p>
+                            <p class="text-3xl font-bold">{{ no_of_alerts or 3 }}</p>
+                        </div>
+                        <div class="p-3 rounded-full bg-[var(--accent-red)]/20">
+                            <span class="material-symbols-outlined text-[var(--accent-red)] text-xl">notification_important</span>
+                        </div>
+                    </div>
+                    <div class="mb-3 text-sm text-[var(--text-secondary)]">
+                        <p>2 high priority alerts</p>
+                        <p>1 medium priority alert</p>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-lg p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-sm text-[var(--text-secondary)] mb-1">System Status</p>
+                            <p class="text-3xl font-bold">Operational</p>
+                        </div>
+                        <div class="p-3 rounded-full bg-[var(--accent-blue)]/20">
+                            <span class="material-symbols-outlined text-[var(--accent-blue)] text-xl">check_circle</span>
+                        </div>
+                    </div>
+                    <div class="mb-3 text-sm text-[var(--text-secondary)]">
+                        <p>All 24 sensors online</p>
+                        <p>Last sync: 2 mins ago</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                <!-- Recent Activity -->
+                <div class="glass-card rounded-lg p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-xl font-semibold">Recent Activity</h2>
+                            <p class="text-sm text-[var(--text-secondary)]">Latest system events and updates</p>
+                        </div>
+                        <button class="p-2 rounded-full bg-[var(--sidebar-bg)] border border-[var(--border-color)] hover:bg-[var(--card-bg)] transition-colors">
+                            <span class="material-symbols-outlined text-sm">refresh</span>
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="activity-item flex items-start gap-4 p-3 rounded-lg">
+                            <div class="p-2 rounded-full bg-[var(--accent-blue)]/20 flex-shrink-0">
+                                <span class="material-symbols-outlined text-[var(--accent-blue)] text-lg">psychology</span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start mb-1">
+                                    <p class="font-medium">AI prediction completed</p>
+                                    <span class="text-xs text-[var(--text-secondary)]">10 mins ago</span>
+                                </div>
+                                <p class="text-sm text-[var(--text-secondary)]">Zone analysis for Sector B - Medium risk detected</p>
+                                <div class="flex gap-2 mt-2">
+                                    <span class="text-xs bg-[var(--accent-blue)]/20 text-[var(--accent-blue)] px-2 py-1 rounded">Neural Network</span>
+                                    <span class="text-xs bg-[var(--card-bg)] text-[var(--text-secondary)] px-2 py-1 rounded">94.2% confidence</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="activity-item flex items-start gap-4 p-3 rounded-lg">
+                            <div class="p-2 rounded-full bg-[var(--accent-yellow)]/20 flex-shrink-0">
+                                <span class="material-symbols-outlined text-[var(--accent-yellow)] text-lg">warning</span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start mb-1">
+                                    <p class="font-medium">Moderate risk detected</p>
+                                    <span class="text-xs text-[var(--text-secondary)]">45 mins ago</span>
+                                </div>
+                                <p class="text-sm text-[var(--text-secondary)]">Slope movement in Zone 3 - Personnel notified</p>
+                                <div class="flex gap-2 mt-2">
+                                    <span class="text-xs bg-[var(--accent-yellow)]/20 text-[var(--accent-yellow)] px-2 py-1 rounded">Seismic: 4.2Hz</span>
+                                    <span class="text-xs bg-[var(--card-bg)] text-[var(--text-secondary)] px-2 py-1 rounded">Weather: 31mm</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="activity-item flex items-start gap-4 p-3 rounded-lg">
+                            <div class="p-2 rounded-full bg-[var(--accent-blue)]/20 flex-shrink-0">
+                                <span class="material-symbols-outlined text-[var(--accent-blue)] text-lg">check_circle</span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start mb-1">
+                                    <p class="font-medium">System health check completed</p>
+                                    <span class="text-xs text-[var(--text-secondary)]">2 hours ago</span>
+                                </div>
+                                <p class="text-sm text-[var(--text-secondary)]">All sensors functioning normally - No issues detected</p>
+                                <div class="flex gap-2 mt-2">
+                                    <span class="text-xs bg-[var(--accent-blue)]/20 text-[var(--accent-blue)] px-2 py-1 rounded">24/24 Online</span>
+                                    <span class="text-xs bg-[var(--card-bg)] text-[var(--text-secondary)] px-2 py-1 rounded">99.7% Uptime</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="activity-item flex items-start gap-4 p-3 rounded-lg">
+                            <div class="p-2 rounded-full bg-[var(--accent-orange)]/20 flex-shrink-0">
+                                <span class="material-symbols-outlined text-[var(--accent-orange)] text-lg">upload_file</span>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start mb-1">
+                                    <p class="font-medium">New data uploaded</p>
+                                    <span class="text-xs text-[var(--text-secondary)]">4 hours ago</span>
+                                </div>
+                                <p class="text-sm text-[var(--text-secondary)]">Geological survey data processed successfully</p>
+                                <div class="flex gap-2 mt-2">
+                                    <span class="text-xs bg-[var(--accent-orange)]/20 text-[var(--accent-orange)] px-2 py-1 rounded">2.4MB</span>
+                                    <span class="text-xs bg-[var(--card-bg)] text-[var(--text-secondary)] px-2 py-1 rounded">Processed</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="glass-card rounded-lg p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-xl font-semibold">Quick Actions</h2>
+                            <p class="text-sm text-[var(--text-secondary)]">Access key system functions</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <a href="{{ url_for('predictions')}}" class="quick-action-card p-6 rounded-lg bg-[#233648] hover:bg-[#2a4058] transition-all flex flex-col items-center justify-center text-center group">
+                            <div class="p-3 rounded-full bg-[var(--accent-blue)]/20 mb-3 group-hover:bg-[var(--accent-blue)]/30 transition-colors">
+                                <span class="material-symbols-outlined text-[var(--accent-blue)] text-2xl">psychology</span>
+                            </div>
+                            <span class="font-medium">AI Predictions</span>
+                            <span class="text-xs text-[var(--text-secondary)] mt-1">Run analysis</span>
+                        </a>
+                        
+                        <a href="{{ url_for('alerts')}}" class="quick-action-card p-6 rounded-lg bg-[#233648] hover:bg-[#2a4058] transition-all flex flex-col items-center justify-center text-center group">
+                            <div class="p-3 rounded-full bg-[var(--accent-red)]/20 mb-3 group-hover:bg-[var(--accent-red)]/30 transition-colors">
+                                <span class="material-symbols-outlined text-[var(--accent-red)] text-2xl">crisis_alert</span>
+                            </div>
+                            <span class="font-medium">View Alerts</span>
+                            <span class="text-xs text-[var(--text-secondary)] mt-1">3 active</span>
+                        </a>
+                        
+                        <a href="{{ url_for('upload')}}" class="quick-action-card p-6 rounded-lg bg-[#233648] hover:bg-[#2a4058] transition-all flex flex-col items-center justify-center text-center group">
+                            <div class="p-3 rounded-full bg-[var(--accent-orange)]/20 mb-3 group-hover:bg-[var(--accent-orange)]/30 transition-colors">
+                                <span class="material-symbols-outlined text-[var(--accent-orange)] text-2xl">upload_file</span>
+                            </div>
+                            <span class="font-medium">Upload Data</span>
+                            <span class="text-xs text-[var(--text-secondary)] mt-1">Add new data</span>
+                        </a>
+                        
+                        <a href="{{ url_for('results')}}" class="quick-action-card p-6 rounded-lg bg-[#233648] hover:bg-[#2a4058] transition-all flex flex-col items-center justify-center text-center group">
+                            <div class="p-3 rounded-full bg-[var(--accent-blue)]/20 mb-3 group-hover:bg-[var(--accent-blue)]/30 transition-colors">
+                                <span class="material-symbols-outlined text-[var(--accent-blue)] text-2xl">analytics</span>
+                            </div>
+                            <span class="font-medium">Analytics</span>
+                            <span class="text-xs text-[var(--text-secondary)] mt-1">View reports</span>
+                        </a>
+                    </div>
+
+                    <!-- System Overview -->
+                    <div class="border-t border-[var(--border-color)] pt-4">
+                        <h3 class="text-sm font-medium mb-3 text-[var(--text-secondary)]">SYSTEM OVERVIEW</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm">Model Accuracy</span>
+                                <span class="text-sm font-medium text-[var(--accent-blue)]">94.2%</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm">Active Sensors</span>
+                                <span class="text-sm font-medium">24/24</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm">Data Processing</span>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-2 h-2 bg-[var(--accent-blue)] rounded-full"></div>
+                                    <span class="text-sm font-medium">Real-time</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm">Last Backup</span>
+                                <span class="text-sm font-medium text-[var(--text-secondary)]">2 mins ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Real-time clock
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('currentTime').textContent = timeString;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Location functionality
+        const btn = document.getElementById("getLocationBtn");
+        
+        btn.addEventListener("click", () => {
+            if (navigator.geolocation) {
+                // Add loading state
+                btn.style.opacity = '0.6';
+                btn.style.cursor = 'wait';
+                
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const data = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    };
+
+                    // Send location to Flask backend
+                    fetch("/location", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(data)
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        console.log('Location updated:', result);
+                        // Visual feedback
+                        btn.style.borderColor = 'var(--accent-blue)';
+                        setTimeout(() => {
+                            btn.style.borderColor = 'var(--border-color)';
+                        }, 2000);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    })
+                    .finally(() => {
+                        btn.style.opacity = '1';
+                        btn.style.cursor = 'pointer';
+                    });
+                }, (error) => {
+                    console.error('Geolocation error:', error);
+                    btn.style.opacity = '1';
+                    btn.style.cursor = 'pointer';
+                });
+            } else {
+                alert('Geolocation is not supported by this browser.');
+            }
+        });
+
+        // Hover effects for cards
+        document.querySelectorAll('.glass-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-2px)';
+                this.style.borderColor = '#6e7681';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.borderColor = 'var(--border-color)';
+            });
+        });
+
+        // Initialize
+        console.log('MineSafe Dashboard initialized');
+        console.log('Theme: Professional Dark v2.1');
+    </script>
+</body>
+</html>
